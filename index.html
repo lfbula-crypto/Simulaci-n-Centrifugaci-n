@@ -4,11 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Simulador AR — Centrifugacion MF-II</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{overflow:hidden;font-family:'Courier New',monospace;background:#000;}
+    #camview{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+    #arcanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
     :root{--a:#00dcff;--a2:#ff6b35;--a3:#a0ff60;--w:#ffcc00;--d:#3a5a72;--p:rgba(4,8,18,.93);--b:rgba(0,220,255,.15);--r:10px;}
     #hud{position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:10px 16px 16px;background:var(--p);border-top:1px solid var(--b);backdrop-filter:blur(20px);display:flex;flex-direction:column;gap:7px;}
     .hh{display:flex;justify-content:space-between;align-items:center;}
@@ -33,7 +33,7 @@
     #bp.paused{border-color:var(--a);color:var(--a);}
     #br{border:1px solid var(--d);color:var(--d);}
     #btnH{border:1px solid var(--a);color:var(--a);}
-    #hint{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);z-index:9998;text-align:center;pointer-events:none;}
+    #hint{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);z-index:9998;text-align:center;pointer-events:none;display:none;}
     .ring{width:120px;height:120px;border-radius:50%;border:2px solid var(--a);margin:0 auto 12px;animation:pulse 2s ease-in-out infinite;box-shadow:0 0 20px rgba(0,220,255,.2);}
     @keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
     .ht2{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--a);}
@@ -45,11 +45,7 @@
 <body>
  
 <div id="status">Iniciando camara...</div>
- 
-<div id="hint">
-  <div class="ring"></div>
-  <p class="ht2">Apunta al marcador Hiro</p>
-</div>
+<div id="hint"><div class="ring"></div><p class="ht2">Apunta al marcador Hiro</p></div>
  
 <div id="hiroBox">
   <svg width="180" height="180" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
@@ -73,55 +69,12 @@
   <p>Apunta la camara aqui</p>
 </div>
  
-<!-- ESCENA AR.js — funciona con HTTPS (GitHub Pages) -->
-<a-scene
-  embedded
-  arjs="sourceType:webcam; facingMode:environment; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3; trackingMethod:best;"
-  vr-mode-ui="enabled:false"
-  renderer="antialias:true; alpha:true; logarithmicDepthBuffer:true;"
-  loading-screen="enabled:false"
->
-  <a-entity camera></a-entity>
+<!-- Video camara trasera -->
+<video id="camview" autoplay playsinline muted></video>
  
-  <a-marker preset="hiro" id="marker">
+<!-- Canvas Three.js -->
+<canvas id="arcanvas"></canvas>
  
-    <!-- Tambor rotatorio -->
-    <a-cylinder id="tambor"
-      position="0 0.5 0" radius="0.62" height="1.0"
-      color="#00dcff" opacity="0.22" side="double"
-      segments-radial="48" wireframe="false">
-    </a-cylinder>
- 
-    <!-- Anillo superior e inferior -->
-    <a-torus position="0 1.01 0" radius="0.62" radius-tubular="0.014"
-      color="#00dcff" opacity="0.8" segments-tubular="48"></a-torus>
-    <a-torus position="0 0.0 0" radius="0.62" radius-tubular="0.014"
-      color="#00dcff" opacity="0.8" segments-tubular="48"></a-torus>
- 
-    <!-- Eje central -->
-    <a-cylinder position="0 0.5 0" radius="0.022" height="1.12"
-      color="#ffffff" opacity="0.5"></a-cylinder>
- 
-    <!-- Particulas pesadas (naranja) — migran hacia afuera -->
-    <a-sphere id="p0" radius="0.065" color="#ff6b35" metalness="0.7" roughness="0.2"></a-sphere>
-    <a-sphere id="p1" radius="0.065" color="#ff6b35" metalness="0.7" roughness="0.2"></a-sphere>
-    <a-sphere id="p2" radius="0.065" color="#ff6b35" metalness="0.7" roughness="0.2"></a-sphere>
-    <a-sphere id="p3" radius="0.065" color="#ff6b35" metalness="0.7" roughness="0.2"></a-sphere>
- 
-    <!-- Particulas livianas (cian) — migran hacia el centro -->
-    <a-sphere id="p4" radius="0.048" color="#00ffcc" metalness="0.5" roughness="0.3"></a-sphere>
-    <a-sphere id="p5" radius="0.048" color="#00ffcc" metalness="0.5" roughness="0.3"></a-sphere>
-    <a-sphere id="p6" radius="0.048" color="#00ffcc" metalness="0.5" roughness="0.3"></a-sphere>
-    <a-sphere id="p7" radius="0.048" color="#00ffcc" metalness="0.5" roughness="0.3"></a-sphere>
- 
-    <!-- Etiquetas flotantes -->
-    <a-text id="lblG" value="G = -"  position="0 1.30 0" align="center" color="#00dcff" width="3"></a-text>
-    <a-text id="lblV" value="Vm = -" position="0 1.15 0" align="center" color="#a0ff60" width="3"></a-text>
- 
-  </a-marker>
-</a-scene>
- 
-<!-- HUD -->
 <div id="hud">
   <div class="hh">
     <span class="ht">Centrifugacion — Simulador AR</span>
@@ -150,124 +103,183 @@
   </div>
 </div>
  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/nicktindall/cyclon.p2p-rtc-client@master/lib/three.js"></script>
+ 
 <script>
-  var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0;
-  var particles=[
-    {id:'p0',angle:0,           rad:.08,heavy:true, el:null},
-    {id:'p1',angle:Math.PI/2,   rad:.08,heavy:true, el:null},
-    {id:'p2',angle:Math.PI,     rad:.08,heavy:true, el:null},
-    {id:'p3',angle:3*Math.PI/2, rad:.08,heavy:true, el:null},
-    {id:'p4',angle:Math.PI/4,   rad:.50,heavy:false,el:null},
-    {id:'p5',angle:3*Math.PI/4, rad:.50,heavy:false,el:null},
-    {id:'p6',angle:5*Math.PI/4, rad:.50,heavy:false,el:null},
-    {id:'p7',angle:7*Math.PI/4, rad:.50,heavy:false,el:null}
-  ];
+/* ═══ ESTADO ═══ */
+var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0;
+var particles=[
+  {angle:0,           rad:.08,heavy:true},
+  {angle:Math.PI/2,   rad:.08,heavy:true},
+  {angle:Math.PI,     rad:.08,heavy:true},
+  {angle:3*Math.PI/2, rad:.08,heavy:true},
+  {angle:Math.PI/4,   rad:.50,heavy:false},
+  {angle:3*Math.PI/4, rad:.50,heavy:false},
+  {angle:5*Math.PI/4, rad:.50,heavy:false},
+  {angle:7*Math.PI/4, rad:.50,heavy:false}
+];
  
-  function cO(n){return 2*Math.PI*n/60;}
-  function cG(w,r){return w*w*r/G_GRAV;}
-  function cA(w,r){return w*w*r;}
-  function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
-  function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
-  function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
-  function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
-  function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
-  function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
+/* ═══ FISICA ═══ */
+function cO(n){return 2*Math.PI*n/60;}
+function cG(w,r){return w*w*r/G_GRAV;}
+function cA(w,r){return w*w*r;}
+function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
+function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
+function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
+function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
+function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
+function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
  
-  function compute(){
-    var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
-        dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
-        mu=+document.getElementById('sMu').value*1e-3,
-        w=cO(rpm),G=cG(w,r),ac=cA(w,r),Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
-    document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
-    document.getElementById('rG').textContent=G.toFixed(1)+' G';
-    document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
-    document.getElementById('rVm').textContent=fV(Vm);
-    document.getElementById('rFc').textContent=fF(Fc);
-    document.getElementById('rZona').textContent=zG(G);
-    document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
-    document.getElementById('lblG').setAttribute('value','G='+G.toFixed(0));
-    document.getElementById('lblV').setAttribute('value','Vm='+fV(Vm));
-    return{w:w,r:r,dr:dr,dp:dp,mu:mu};
+function compute(){
+  var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
+      dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
+      mu=+document.getElementById('sMu').value*1e-3,
+      w=cO(rpm),G=cG(w,r),ac=cA(w,r),Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
+  document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
+  document.getElementById('rG').textContent=G.toFixed(1)+' G';
+  document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
+  document.getElementById('rVm').textContent=fV(Vm);
+  document.getElementById('rFc').textContent=fF(Fc);
+  document.getElementById('rZona').textContent=zG(G);
+  document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
+  return{w:w,r:r,dr:dr,dp:dp,mu:mu};
+}
+ 
+['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
+document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
+document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
+document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
+document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
+document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
+document.getElementById('bp').onclick=function(){paused=!paused;this.classList.toggle('paused',paused);this.textContent=paused?'Reanudar':'Pausa';};
+document.getElementById('br').onclick=function(){particles.forEach(function(p){p.rad=p.heavy?.08:.50;});sysAngle=0;};
+function toggleH(){var b=document.getElementById('hiroBox'),t=document.getElementById('btnH');if(b.style.display==='block'){b.style.display='none';t.textContent='Ver Hiro';}else{b.style.display='block';t.textContent='Ocultar Hiro';}}
+ 
+/* ═══ THREE.JS ═══ */
+var renderer,scene,camera3d,tambor3d,particleMeshes=[];
+ 
+function initThree(){
+  var canvas=document.getElementById('arcanvas');
+  renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setClearColor(0x000000,0);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  scene=new THREE.Scene();
+  camera3d=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.01,1000);
+  camera3d.position.set(0,2,3);
+  camera3d.lookAt(0,0.5,0);
+  scene.add(new THREE.AmbientLight(0xffffff,0.8));
+  var dl=new THREE.DirectionalLight(0x00dcff,1.0);
+  dl.position.set(1,2,1);scene.add(dl);
+  var dl2=new THREE.DirectionalLight(0xff6b35,0.4);
+  dl2.position.set(-1,1,-1);scene.add(dl2);
+ 
+  // Tambor wireframe
+  var geo=new THREE.CylinderGeometry(0.6,0.6,1,48,1,true);
+  var mat=new THREE.MeshBasicMaterial({color:0x00dcff,wireframe:true,transparent:true,opacity:0.25});
+  tambor3d=new THREE.Mesh(geo,mat);tambor3d.position.y=0.5;scene.add(tambor3d);
+ 
+  // Anillos
+  var rg=new THREE.TorusGeometry(0.6,0.013,8,48);
+  var rm=new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.9});
+  var rTop=new THREE.Mesh(rg,rm);rTop.position.y=1.01;rTop.rotation.x=Math.PI/2;scene.add(rTop);
+  var rBot=new THREE.Mesh(rg,rm.clone());rBot.rotation.x=Math.PI/2;scene.add(rBot);
+ 
+  // Eje
+  var ag=new THREE.CylinderGeometry(0.02,0.02,1.1,8);
+  var am=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.5});
+  var eje=new THREE.Mesh(ag,am);eje.position.y=0.5;scene.add(eje);
+ 
+  // Particulas
+  for(var i=0;i<8;i++){
+    var r=i<4?0.065:0.048, c=i<4?0xff6b35:0x00ffcc;
+    var s=new THREE.Mesh(
+      new THREE.SphereGeometry(r,16,16),
+      new THREE.MeshPhongMaterial({color:c,shininess:100,specular:0x444444})
+    );
+    scene.add(s);particleMeshes.push(s);
   }
  
-  ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
-  document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
-  document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';document.getElementById('tambor').setAttribute('radius',(+this.value/0.6*RMAX).toFixed(3));compute();};
-  document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
-  document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
-  document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
- 
-  document.getElementById('bp').onclick=function(){
-    paused=!paused;this.classList.toggle('paused',paused);
-    this.textContent=paused?'Reanudar':'Pausa';
-    if(!paused){lastT=null;requestAnimationFrame(tick);}
-  };
-  document.getElementById('br').onclick=function(){
-    particles.forEach(function(p){p.rad=p.heavy?.08:.50;});
-    sysAngle=0;compute();
-  };
-  function toggleH(){
-    var b=document.getElementById('hiroBox'),t=document.getElementById('btnH');
-    if(b.style.display==='block'){b.style.display='none';t.textContent='Ver Hiro';}
-    else{b.style.display='block';t.textContent='Ocultar Hiro';}
-  }
- 
-  var statusEl=document.getElementById('status');
-  var hintEl=document.getElementById('hint');
- 
-  document.getElementById('marker').addEventListener('markerFound',function(){
-    hintEl.style.display='none';
-    statusEl.textContent='Marcador detectado!';
-    statusEl.style.color='#00dcff';
-    statusEl.style.borderColor='rgba(0,220,255,.4)';
+  window.addEventListener('resize',function(){
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    camera3d.aspect=window.innerWidth/window.innerHeight;
+    camera3d.updateProjectionMatrix();
   });
-  document.getElementById('marker').addEventListener('markerLost',function(){
-    hintEl.style.display='block';
-    statusEl.textContent='Buscando marcador Hiro...';
-    statusEl.style.color='';
-    statusEl.style.borderColor='';
-  });
+}
  
-  document.querySelector('a-scene').addEventListener('loaded',function(){
-    // Forzar camara trasera en movil
-    setTimeout(function(){
-      var vids=document.querySelectorAll('video');
-      vids.forEach(function(v){
-        v.style.cssText='position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;';
-      });
-      if(vids.length>0){
-        statusEl.textContent='Camara activa — apunta al Hiro';
-        statusEl.style.color='#00dcff';
-      }
-    },1500);
- 
-    particles.forEach(function(p){p.el=document.getElementById(p.id);});
-    compute();
-    requestAnimationFrame(tick);
-  });
- 
-  function tick(ts){
-    if(paused)return;
-    if(!lastT)lastT=ts;
-    var dt=Math.min((ts-lastT)/1000,.05);lastT=ts;
-    var v=compute(),rm=(v.r/.6)*RMAX;
-    sysAngle+=v.w*dt*.3;
-    for(var i=0;i<particles.length;i++){
-      var p=particles[i],rr=p.rad*v.r;
-      var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*dt;
-      if(nr>.96)nr=.96;if(nr<.02)nr=.02;
-      p.rad=nr;p.angle+=v.w*dt*(.28+.03*i);
-      var rv=p.rad*rm;
-      if(p.el)p.el.setAttribute('position',{
-        x:rv*Math.cos(p.angle+sysAngle*.04),
-        y:.5,
-        z:rv*Math.sin(p.angle+sysAngle*.04)
-      });
+function animate(){
+  requestAnimationFrame(animate);
+  if(paused)return;
+  var v=compute(),rm2=(v.r/0.6)*RMAX;
+  sysAngle+=v.w*0.016*0.3;
+  if(tambor3d)tambor3d.rotation.y=sysAngle;
+  for(var i=0;i<particles.length;i++){
+    var p=particles[i],rr=p.rad*v.r;
+    var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*0.016;
+    if(nr>.96)nr=.96;if(nr<.02)nr=.02;
+    p.rad=nr;p.angle+=v.w*0.016*(0.28+0.03*i);
+    var rv=p.rad*rm2;
+    if(particleMeshes[i]){
+      particleMeshes[i].position.x=rv*Math.cos(p.angle+sysAngle*0.04);
+      particleMeshes[i].position.y=0.5;
+      particleMeshes[i].position.z=rv*Math.sin(p.angle+sysAngle*0.04);
     }
-    var t=document.getElementById('tambor');
-    if(t)t.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
-    requestAnimationFrame(tick);
   }
+  renderer.render(scene,camera3d);
+}
+ 
+/* ═══ CAMARA TRASERA ═══ */
+var statusEl=document.getElementById('status');
+var vid=document.getElementById('camview');
+ 
+// Intentar camara trasera primero, si falla usar cualquier camara
+function startCamera(){
+  navigator.mediaDevices.getUserMedia({
+    video:{facingMode:{exact:'environment'},width:{ideal:1280},height:{ideal:720}},
+    audio:false
+  }).then(function(stream){
+    vid.srcObject=stream;
+    vid.onloadedmetadata=function(){
+      vid.play();
+      statusEl.textContent='Camara activa';
+      statusEl.style.color='#00dcff';
+      initThree();animate();compute();
+    };
+  }).catch(function(){
+    // Si falla camara trasera exacta, intentar con preferencia
+    navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}},
+      audio:false
+    }).then(function(stream){
+      vid.srcObject=stream;
+      vid.onloadedmetadata=function(){
+        vid.play();
+        statusEl.textContent='Camara activa';
+        statusEl.style.color='#00dcff';
+        initThree();animate();compute();
+      };
+    }).catch(function(){
+      // Ultima opcion: cualquier camara disponible
+      navigator.mediaDevices.getUserMedia({video:true,audio:false})
+      .then(function(stream){
+        vid.srcObject=stream;
+        vid.onloadedmetadata=function(){
+          vid.play();
+          statusEl.textContent='Camara activa (frontal)';
+          statusEl.style.color='#ffcc00';
+          initThree();animate();compute();
+        };
+      }).catch(function(err){
+        statusEl.textContent='Error: '+err.name;
+        statusEl.style.color='#ff6b35';
+        initThree();animate();compute();
+      });
+    });
+  });
+}
+ 
+startCamera();
 </script>
 </body>
 </html>
