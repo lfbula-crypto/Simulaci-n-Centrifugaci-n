@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Simulador AR — Centrifugacion MF-II</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{overflow:hidden;font-family:'Courier New',monospace;background:#000;}
+    #camview{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+    #arcanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+    :root{--a:#00dcff;--a2:#ff6b35;--a3:#a0ff60;--w:#ffcc00;--d:#3a5a72;--p:rgba(4,8,18,.93);--b:rgba(0,220,255,.15);--r:10px;}
+    #hud{position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:10px 16px 16px;background:var(--p);border-top:1px solid var(--b);backdrop-filter:blur(20px);display:flex;flex-direction:column;gap:7px;}
+    .hh{display:flex;justify-content:space-between;align-items:center;}
+    .ht{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--a);}
+    .hb{font-size:.5rem;padding:2px 8px;border:1px solid var(--b);border-radius:20px;color:var(--d);}
+    .sr{display:flex;align-items:center;gap:8px;}
+    .sl{font-size:.58rem;color:var(--d);min-width:88px;white-space:nowrap;}
+    .sv{font-size:.68rem;color:var(--a);min-width:66px;text-align:right;}
+    input[type=range]{-webkit-appearance:none;flex:1;height:3px;outline:none;cursor:pointer;border-radius:3px;background:linear-gradient(to right,var(--a) 0%,var(--a) calc(var(--p,50%)*1%),rgba(255,255,255,.08) calc(var(--p,50%)*1%),rgba(255,255,255,.08) 100%);}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--a);border:2px solid #fff;cursor:grab;}
+    .rg{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;}
+    .rc{background:rgba(0,220,255,.04);border:1px solid var(--b);border-radius:6px;padding:5px 7px;}
+    .rl{font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;color:var(--d);margin-bottom:2px;}
+    .rv{font-size:.7rem;font-weight:bold;color:var(--a);}
+    .rv.g{color:var(--a3);}.rv.o{color:var(--a2);}.rv.w{color:var(--w);}
+    .hf{display:flex;justify-content:space-between;align-items:center;}
+    .fm{font-size:.44rem;color:var(--d);line-height:1.8;}
+    .fm span{color:rgba(0,220,255,.5);}
+    .bs{display:flex;gap:6px;}
+    button{font-family:'Courier New',monospace;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;padding:7px 14px;border-radius:var(--r);cursor:pointer;background:transparent;}
+    #bp{border:1px solid var(--a2);color:var(--a2);}
+    #bp.paused{border-color:var(--a);color:var(--a);}
+    #br{border:1px solid var(--d);color:var(--d);}
+    #btnH{border:1px solid var(--a);color:var(--a);}
+    #hint{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:9998;text-align:center;pointer-events:none;}
+    .ring{width:110px;height:110px;border-radius:50%;border:2px solid var(--a);margin:0 auto 10px;animation:pulse 2s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+    .ht2{font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--a);}
+    #hiroBox{position:fixed;top:50%;left:12px;transform:translateY(-50%);z-index:9999;background:rgba(4,8,18,.95);border:1px solid var(--b);border-radius:10px;padding:10px;display:none;}
+    #hiroBox p{font-size:.44rem;color:var(--d);margin-top:6px;letter-spacing:.1em;text-transform:uppercase;text-align:center;}
+    #status{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:9999;font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;padding:4px 14px;border-radius:20px;background:rgba(4,8,18,.8);border:1px solid var(--b);color:var(--d);}
+  </style>
+</head>
+<body>
+
+<div id="status">Iniciando camara...</div>
+
+<div id="hint">
+  <div class="ring"></div>
+  <p class="ht2">Apunta al marcador Hiro</p>
+</div>
+
+<div id="hiroBox">
+  <svg width="180" height="180" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="200" fill="white"/>
+    <rect x="10" y="10" width="180" height="180" fill="black"/>
+    <rect x="26" y="26" width="148" height="148" fill="white"/>
+    <rect x="38" y="38" width="124" height="124" fill="black"/>
+    <rect x="44" y="44" width="24" height="10" fill="white"/>
+    <rect x="44" y="58" width="34" height="10" fill="white"/>
+    <rect x="44" y="72" width="20" height="10" fill="white"/>
+    <rect x="44" y="86" width="28" height="10" fill="white"/>
+    <rect x="44" y="100" width="16" height="10" fill="white"/>
+    <rect x="86" y="44" width="48" height="24" fill="white"/>
+    <rect x="86" y="76" width="24" height="10" fill="white"/>
+    <rect x="86" y="90" width="48" height="18" fill="white"/>
+    <rect x="86" y="116" width="30" height="10" fill="white"/>
+    <rect x="44" y="116" width="88" height="10" fill="white"/>
+    <rect x="44" y="130" width="58" height="12" fill="white"/>
+    <rect x="116" y="116" width="26" height="26" fill="white"/>
+  </svg>
+  <p>Apunta la camara aqui</p>
+</div>
+
+<!-- Video de camara manejado manualmente -->
+<video id="camview" autoplay playsinline muted></video>
+
+<!-- Canvas donde Three.js renderiza los objetos 3D AR -->
+<canvas id="arcanvas"></canvas>
+
+<div id="hud">
+  <div class="hh">
+    <span class="ht">Centrifugacion — Simulador AR</span>
+    <span class="hb">Unidad III · MF-II</span>
+  </div>
+  <div class="sr"><span class="sl">RPM</span><input type="range" id="sRPM" min="0" max="5000" value="1200" step="50"><span class="sv" id="vRPM">1200 rpm</span></div>
+  <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.05" max="0.60" value="0.30" step="0.01"><span class="sv" id="vR">0.30 m</span></div>
+  <div class="sr"><span class="sl">Densidad kg/m3</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
+  <div class="sr"><span class="sl">d_p (um)</span><input type="range" id="sDp" min="1" max="200" value="50" step="1"><span class="sv" id="vDp">50 um</span></div>
+  <div class="sr"><span class="sl">viscosidad mPas</span><input type="range" id="sMu" min="0.5" max="100" value="1.0" step="0.5"><span class="sv" id="vMu">1.0 mPas</span></div>
+  <div class="rg">
+    <div class="rc"><div class="rl">omega rad/s</div><div class="rv"  id="rOmega">-</div></div>
+    <div class="rc"><div class="rl">Factor G</div>  <div class="rv g" id="rG">-</div></div>
+    <div class="rc"><div class="rl">Fuerza Fc</div> <div class="rv o" id="rFc">-</div></div>
+    <div class="rc"><div class="rl">V. Migrac.</div><div class="rv g" id="rVm">-</div></div>
+    <div class="rc"><div class="rl">ac m/s2</div>   <div class="rv"   id="rAc">-</div></div>
+    <div class="rc"><div class="rl">Zona Sep.</div> <div class="rv w" id="rZona">-</div></div>
+  </div>
+  <div class="hf">
+    <div class="fm"><span>G</span>=w2r/g | <span>Vm</span>=d2*dr*w2*r/(18mu) | <span>w</span>=2piN/60</div>
+    <div class="bs">
+      <button id="btnH" onclick="toggleH()">Ver Hiro</button>
+      <button id="br">Reset</button>
+      <button id="bp">Pausa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Three.js para renderizado 3D -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- jsartoolkit5 para deteccion del marcador Hiro -->
+<script src="https://cdn.jsdelivr.net/gh/nicktindall/cyclon.p2p-rtc-client@master/lib/three.js"></script>
+
+<script>
+/* ═══ FISICA ═══ */
+var G_GRAV=9.81, RMAX=0.58, paused=false, lastT=null, sysAngle=0;
+var particles=[
+  {angle:0,           rad:.08,heavy:true},
+  {angle:Math.PI/2,   rad:.08,heavy:true},
+  {angle:Math.PI,     rad:.08,heavy:true},
+  {angle:3*Math.PI/2, rad:.08,heavy:true},
+  {angle:Math.PI/4,   rad:.50,heavy:false},
+  {angle:3*Math.PI/4, rad:.50,heavy:false},
+  {angle:5*Math.PI/4, rad:.50,heavy:false},
+  {angle:7*Math.PI/4, rad:.50,heavy:false}
+];
+function cO(n){return 2*Math.PI*n/60;}
+function cG(w,r){return w*w*r/G_GRAV;}
+function cA(w,r){return w*w*r;}
+function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
+function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
+function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
+function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
+function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
+function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
+
+function compute(){
+  var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
+      dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
+      mu=+document.getElementById('sMu').value*1e-3,
+      w=cO(rpm),G=cG(w,r),ac=cA(w,r),Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
+  document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
+  document.getElementById('rG').textContent=G.toFixed(1)+' G';
+  document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
+  document.getElementById('rVm').textContent=fV(Vm);
+  document.getElementById('rFc').textContent=fF(Fc);
+  document.getElementById('rZona').textContent=zG(G);
+  document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
+  return{w:w,r:r,dr:dr,dp:dp,mu:mu};
+}
+['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
+document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
+document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
+document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
+document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
+document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
+document.getElementById('bp').onclick=function(){paused=!paused;this.classList.toggle('paused',paused);this.textContent=paused?'Reanudar':'Pausa';};
+document.getElementById('br').onclick=function(){particles.forEach(function(p){p.rad=p.heavy?.08:.50;});sysAngle=0;};
+function toggleH(){var b=document.getElementById('hiroBox'),t=document.getElementById('btnH');if(b.style.display==='block'){b.style.display='none';t.textContent='Ver Hiro';}else{b.style.display='block';t.textContent='Ocultar Hiro';}}
+
+/* ═══ THREE.JS — Escena 3D ═══ */
+var renderer, scene, camera3d;
+var tambor3d, particleMeshes=[], markerVisible=false;
+
+function initThree(){
+  var canvas=document.getElementById('arcanvas');
+  renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setClearColor(0x000000,0);
+
+  scene=new THREE.Scene();
+  camera3d=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.01,1000);
+  camera3d.position.set(0,2,3);
+  camera3d.lookAt(0,0,0);
+
+  // Luz
+  scene.add(new THREE.AmbientLight(0xffffff,0.7));
+  var dLight=new THREE.DirectionalLight(0x00dcff,0.8);
+  dLight.position.set(1,2,1);
+  scene.add(dLight);
+
+  // Tambor (cilindro wireframe)
+  var geo=new THREE.CylinderGeometry(0.6,0.6,1,32,1,true);
+  var mat=new THREE.MeshBasicMaterial({color:0x00dcff,wireframe:true,transparent:true,opacity:0.3});
+  tambor3d=new THREE.Mesh(geo,mat);
+  tambor3d.position.y=0.5;
+  scene.add(tambor3d);
+
+  // Anillo superior e inferior
+  var ringGeo=new THREE.TorusGeometry(0.6,0.012,8,32);
+  var ringMat=new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.8});
+  var rTop=new THREE.Mesh(ringGeo,ringMat); rTop.position.y=1.01; rTop.rotation.x=Math.PI/2; scene.add(rTop);
+  var rBot=new THREE.Mesh(ringGeo,ringMat.clone()); rBot.rotation.x=Math.PI/2; scene.add(rBot);
+
+  // Eje
+  var axGeo=new THREE.CylinderGeometry(0.02,0.02,1.1,8);
+  var axMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.4});
+  scene.add(new THREE.Mesh(axGeo,axMat)).position.y=0.5;
+
+  // Particulas
+  for(var i=0;i<8;i++){
+    var r=i<4?0.055:0.04;
+    var c=i<4?0xff6b35:0x00ffcc;
+    var sph=new THREE.Mesh(
+      new THREE.SphereGeometry(r,10,10),
+      new THREE.MeshPhongMaterial({color:c,shininess:80})
+    );
+    scene.add(sph);
+    particleMeshes.push(sph);
+  }
+
+  window.addEventListener('resize',function(){
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    camera3d.aspect=window.innerWidth/window.innerHeight;
+    camera3d.updateProjectionMatrix();
+  });
+}
+
+function animateThree(){
+  requestAnimationFrame(animateThree);
+  if(paused)return;
+
+  var v=compute();
+  var rm=(v.r/0.6)*RMAX;
+  sysAngle+=v.w*0.016*0.3;
+
+  if(tambor3d) tambor3d.rotation.y=sysAngle;
+
+  for(var i=0;i<particles.length;i++){
+    var p=particles[i];
+    var rr=p.rad*v.r;
+    var Vm_r=cV(v.dp,v.dr,v.w,rr,v.mu);
+    var nr=p.rad+(p.heavy?1:-1)*(Vm_r/v.r)*0.016;
+    if(nr>.96)nr=.96; if(nr<.02)nr=.02;
+    p.rad=nr; p.angle+=v.w*0.016*(0.28+0.03*i);
+    var rv=p.rad*rm;
+    if(particleMeshes[i]){
+      particleMeshes[i].position.x=rv*Math.cos(p.angle+sysAngle*0.04);
+      particleMeshes[i].position.y=0.5;
+      particleMeshes[i].position.z=rv*Math.sin(p.angle+sysAngle*0.04);
+    }
+  }
+  renderer.render(scene,camera3d);
+}
+
+/* ═══ CAMARA — getUserMedia directo ═══ */
+var statusEl=document.getElementById('status');
+var vid=document.getElementById('camview');
+
+navigator.mediaDevices.getUserMedia({
+  video:{width:{ideal:1280},height:{ideal:720}},
+  audio:false
+}).then(function(stream){
+  vid.srcObject=stream;
+  vid.onloadedmetadata=function(){
+    vid.play();
+    statusEl.textContent='Camara activa';
+    statusEl.style.color='#00dcff';
+    initThree();
+    animateThree();
+    compute();
+  };
+}).catch(function(err){
+  statusEl.textContent='ERROR: '+err.name+' — '+err.message;
+  statusEl.style.color='#ff6b35';
+  // Igual iniciar Three.js para mostrar la simulacion
+  initThree();
+  animateThree();
+  compute();
+});
+</script>
+</body>
+</html>
