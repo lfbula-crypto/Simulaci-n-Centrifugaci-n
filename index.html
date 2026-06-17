@@ -4,11 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Simulador AR — Centrifugacion MF-II</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{overflow:hidden;font-family:'Courier New',monospace;background:#000;}
-    #bgvid{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;display:none;}
-    #arcanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;display:none;}
 
     /* Pantalla de inicio */
     #startScreen{
@@ -26,7 +26,7 @@
     #btnStart{font-family:'Courier New',monospace;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;padding:15px 44px;border-radius:50px;cursor:pointer;background:linear-gradient(135deg,rgba(0,220,255,.12),rgba(0,220,255,.04));border:1px solid rgba(0,220,255,.5);color:#00dcff;box-shadow:0 0 30px rgba(0,220,255,.2);}
     .start-note{font-size:.5rem;color:#1a3040;letter-spacing:.1em;text-align:center;line-height:1.8;}
 
-    /* Hint de escaneo */
+    /* Hint */
     #hint{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);z-index:9998;text-align:center;pointer-events:none;display:none;}
     .ring{width:120px;height:120px;border-radius:50%;border:2px solid #00dcff;margin:0 auto 12px;animation:pulse 2s ease-in-out infinite;box-shadow:0 0 20px rgba(0,220,255,.2);}
     @keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
@@ -59,25 +59,133 @@
     #bp{border:1px solid var(--a2);color:var(--a2);}
     #bp.paused{border-color:var(--a);color:var(--a);}
     #br{border:1px solid var(--d);color:var(--d);}
+
+    /* Panel marcador Hiro para imprimir */
+    #hiroPanel{position:fixed;bottom:80px;right:10px;z-index:9999;background:rgba(2,6,16,.95);border:1px solid rgba(0,220,255,.2);border-radius:10px;padding:8px;display:none;text-align:center;}
+    #hiroPanel p{font-size:.4rem;color:#2a4a62;margin-top:4px;letter-spacing:.1em;text-transform:uppercase;}
+    #btnHiro{position:fixed;top:12px;right:10px;z-index:9999;font-family:'Courier New',monospace;font-size:.45rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:8px;cursor:pointer;background:rgba(2,6,16,.85);border:1px solid rgba(0,220,255,.2);color:rgba(0,220,255,.6);display:none;}
   </style>
 </head>
 <body>
 
-<video id="bgvid" autoplay playsinline muted></video>
-<canvas id="arcanvas"></canvas>
+<!-- ESCENA AR.js — usa la camara trasera del celular -->
+<a-scene
+  id="arScene"
+  arjs="sourceType:webcam; facingMode:environment; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3; trackingMethod:best;"
+  vr-mode-ui="enabled:false"
+  renderer="antialias:true; alpha:true; logarithmicDepthBuffer:true;"
+  loading-screen="enabled:false"
+  style="display:none;"
+>
+  <a-entity camera></a-entity>
+
+  <a-marker preset="hiro" id="hiroMarker">
+
+    <!-- Base del tambor -->
+    <a-cylinder position="0 0.02 0" radius="0.68" height="0.04"
+      color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
+
+    <!-- Cuerpo principal -->
+    <a-cylinder id="tambor" position="0 0.52 0" radius="0.62" height="1.0"
+      color="#0a2a3a" opacity="0.5" side="double" segments-radial="64"
+      material="metalness:0.8; roughness:0.2; emissive:#001520;"></a-cylinder>
+
+    <!-- Lineas verticales -->
+    <a-cylinder position="0.62 0.52 0"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+    <a-cylinder position="-0.62 0.52 0"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+    <a-cylinder position="0 0.52 0.62"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+    <a-cylinder position="0 0.52 -0.62"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+    <a-cylinder position="0.44 0.52 0.44"   radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+    <a-cylinder position="-0.44 0.52 0.44"  radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+    <a-cylinder position="0.44 0.52 -0.44"  radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+    <a-cylinder position="-0.44 0.52 -0.44" radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+
+    <!-- Anillos cromados -->
+    <a-torus position="0 1.02 0" radius="0.64" radius-tubular="0.026"
+      color="#88ccdd" segments-tubular="64" material="metalness:0.9;roughness:0.1;"></a-torus>
+    <a-torus position="0 0.02 0" radius="0.64" radius-tubular="0.026"
+      color="#88ccdd" segments-tubular="64" material="metalness:0.9;roughness:0.1;"></a-torus>
+
+    <!-- Tapa superior con rejilla -->
+    <a-circle position="0 1.02 0" rotation="-90 0 0" radius="0.62"
+      color="#051520" opacity="0.6" material="metalness:0.6;roughness:0.3;"></a-circle>
+    <a-torus position="0 1.03 0" radius="0.45" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
+    <a-torus position="0 1.03 0" radius="0.28" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
+    <a-torus position="0 1.03 0" radius="0.12" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
+
+    <!-- Eje central -->
+    <a-cylinder position="0 0.52 0" radius="0.028" height="1.15"
+      color="#aaccdd" material="metalness:0.95;roughness:0.05;"></a-cylinder>
+
+    <!-- 10 Particulas pesadas naranja -->
+    <a-sphere id="p0"  radius="0.062" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p1"  radius="0.062" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p2"  radius="0.062" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p3"  radius="0.062" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p4"  radius="0.055" color="#ff4400" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p5"  radius="0.055" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p6"  radius="0.058" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p7"  radius="0.058" color="#ff4400" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p8"  radius="0.052" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+    <a-sphere id="p9"  radius="0.052" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+
+    <!-- 10 Particulas livianas cian -->
+    <a-sphere id="p10" radius="0.048" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p11" radius="0.048" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p12" radius="0.044" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p13" radius="0.044" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p14" radius="0.050" color="#00ddaa" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p15" radius="0.050" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p16" radius="0.046" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p17" radius="0.046" color="#00ddaa" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p18" radius="0.042" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+    <a-sphere id="p19" radius="0.042" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+
+    <!-- Etiquetas -->
+    <a-text id="lblG" value="G = -"  position="0 1.35 0" align="center" color="#00dcff" width="3.2"></a-text>
+    <a-text id="lblV" value="Vm = -" position="0 1.18 0" align="center" color="#a0ff60" width="3.2"></a-text>
+
+  </a-marker>
+</a-scene>
 
 <!-- Pantalla de inicio -->
 <div id="startScreen">
   <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
   <h1>Simulador AR<br>Centrifugacion</h1>
-  <p class="sub">Mecanica de Fluidos II · Unidad III<br>Apunta al marcador Hiro impreso</p>
+  <p class="sub">Mecanica de Fluidos II · Unidad III<br>Apunta al marcador Hiro impreso en papel</p>
   <button id="btnStart" onclick="iniciar()">Activar camara</button>
-  <p class="start-note">Permite el acceso a la camara cuando se solicite<br>Luego apunta al marcador Hiro impreso en papel</p>
+  <p class="start-note">
+    Permite el acceso a la camara cuando se solicite<br>
+    El tambor aparece al apuntar al marcador Hiro impreso
+  </p>
 </div>
 
-<!-- Hint -->
 <div id="hint"><div class="ring"></div><p class="hint-txt">Apunta al marcador Hiro</p></div>
 <div id="status"></div>
+<button id="btnHiro" onclick="toggleHiro()">Ver Hiro</button>
+
+<!-- Panel con el marcador Hiro correcto para imprimir -->
+<div id="hiroPanel">
+  <svg width="160" height="160" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="200" fill="white"/>
+    <rect x="10" y="10" width="180" height="180" fill="black"/>
+    <rect x="26" y="26" width="148" height="148" fill="white"/>
+    <rect x="38" y="38" width="124" height="124" fill="black"/>
+    <rect x="44" y="44" width="24" height="10" fill="white"/>
+    <rect x="44" y="58" width="34" height="10" fill="white"/>
+    <rect x="44" y="72" width="20" height="10" fill="white"/>
+    <rect x="44" y="86" width="28" height="10" fill="white"/>
+    <rect x="44" y="100" width="16" height="10" fill="white"/>
+    <rect x="86" y="44" width="48" height="24" fill="white"/>
+    <rect x="86" y="76" width="24" height="10" fill="white"/>
+    <rect x="86" y="90" width="48" height="18" fill="white"/>
+    <rect x="86" y="116" width="30" height="10" fill="white"/>
+    <rect x="44" y="116" width="88" height="10" fill="white"/>
+    <rect x="44" y="130" width="58" height="12" fill="white"/>
+    <rect x="116" y="116" width="26" height="26" fill="white"/>
+  </svg>
+  <p>Este es el marcador correcto</p>
+</div>
 
 <!-- HUD -->
 <div id="hud">
@@ -101,225 +209,110 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-/* ══ FISICA ══ */
-var G_GRAV=9.81,RMAX=0.58,paused=false,sysAngle=0,clock=0;
-var speeds=[],yOff=[];
-for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
-var particles=[];
-for(var i=0;i<20;i++){particles.push({angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10});}
+  var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0,clock=0;
+  var speeds=[],yOff=[];
+  for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
+  var particles=[];
+  for(var i=0;i<20;i++){particles.push({id:'p'+i,angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10,el:null});}
 
-function cO(n){return 2*Math.PI*n/60;}
-function cG(w,r){return w*w*r/G_GRAV;}
-function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
-function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
-function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
-function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
-function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
-function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
+  function cO(n){return 2*Math.PI*n/60;}
+  function cG(w,r){return w*w*r/G_GRAV;}
+  function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
+  function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
+  function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
+  function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
+  function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
+  function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
 
-function compute(){
-  var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
-      dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
-      mu=+document.getElementById('sMu').value*1e-3,
-      w=cO(rpm),G=cG(w,r),ac=w*w*r,Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
-  document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
-  document.getElementById('rG').textContent=G.toFixed(1)+' G';
-  document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
-  document.getElementById('rVm').textContent=fV(Vm);
-  document.getElementById('rFc').textContent=fF(Fc);
-  document.getElementById('rZona').textContent=zG(G);
-  document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
-  return{w:w,r:r,dr:dr,dp:dp,mu:mu};
-}
-
-['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
-document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
-document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
-document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
-document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
-document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
-document.getElementById('bp').onclick=function(){paused=!paused;this.classList.toggle('paused',paused);this.textContent=paused?'Reanudar':'Pausa';};
-document.getElementById('br').onclick=function(){for(var i=0;i<particles.length;i++){particles[i].rad=particles[i].heavy?0.05+Math.random()*0.1:0.40+Math.random()*0.1;}sysAngle=0;};
-
-/* ══ THREE.JS ══ */
-var renderer,scene,cam3d,tambor3d,particleMeshes=[],markerGroup;
-var markerDetected=false, markerLostTimer=null;
-
-function initThree(){
-  var canvas=document.getElementById('arcanvas');
-  renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
-  renderer.setSize(window.innerWidth,window.innerHeight);
-  renderer.setClearColor(0x000000,0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  scene=new THREE.Scene();
-  cam3d=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.01,100);
-  cam3d.position.set(0,1.8,2.8);cam3d.lookAt(0,0.5,0);
-
-  scene.add(new THREE.AmbientLight(0xffffff,0.5));
-  var dl=new THREE.DirectionalLight(0x00dcff,1.2);dl.position.set(2,3,2);scene.add(dl);
-  var dl2=new THREE.DirectionalLight(0xff6b35,0.6);dl2.position.set(-2,1,-1);scene.add(dl2);
-  scene.add(Object.assign(new THREE.PointLight(0x00dcff,1.5,3),{position:{x:0,y:0.5,z:0}}));
-
-  /* Grupo del marcador — OCULTO por defecto */
-  markerGroup=new THREE.Group();
-  markerGroup.visible=false;
-  scene.add(markerGroup);
-
-  function add(geo,mat,x,y,z){var m=new THREE.Mesh(geo,mat);m.position.set(x||0,y||0,z||0);markerGroup.add(m);return m;}
-
-  /* Base */
-  add(new THREE.CylinderGeometry(0.68,0.68,0.04,48),new THREE.MeshPhongMaterial({color:0x051520,opacity:0.9,transparent:true}),0,-0.02,0);
-
-  /* Cuerpo */
-  tambor3d=add(new THREE.CylinderGeometry(0.62,0.62,1.0,64,2,true),new THREE.MeshPhongMaterial({color:0x0a2a3a,emissive:0x001520,specular:0x00dcff,shininess:120,transparent:true,opacity:0.5,side:THREE.DoubleSide}),0,0.5,0);
-
-  /* Lineas verticales */
-  for(var k=0;k<16;k++){
-    var a=(k/16)*Math.PI*2;
-    add(new THREE.CylinderGeometry(0.007,0.007,1.0,4),new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.4}),Math.cos(a)*0.62,0.5,Math.sin(a)*0.62);
+  function compute(){
+    var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
+        dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
+        mu=+document.getElementById('sMu').value*1e-3,
+        w=cO(rpm),G=cG(w,r),ac=w*w*r,Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
+    document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
+    document.getElementById('rG').textContent=G.toFixed(1)+' G';
+    document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
+    document.getElementById('rVm').textContent=fV(Vm);
+    document.getElementById('rFc').textContent=fF(Fc);
+    document.getElementById('rZona').textContent=zG(G);
+    document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
+    document.getElementById('lblG').setAttribute('value','G = '+G.toFixed(0));
+    document.getElementById('lblV').setAttribute('value','Vm = '+fV(Vm));
+    return{w:w,r:r,dr:dr,dp:dp,mu:mu};
   }
 
-  /* Anillos */
-  var rm=new THREE.MeshPhongMaterial({color:0x88ccdd,emissive:0x001a2a,specular:0xffffff,shininess:200});
-  [1.02,0].forEach(function(y){var r=new THREE.Mesh(new THREE.TorusGeometry(0.64,0.026,16,64),rm.clone());r.position.y=y;r.rotation.x=Math.PI/2;markerGroup.add(r);});
+  ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
+  document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
+  document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
+  document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
+  document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
+  document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
+  document.getElementById('bp').onclick=function(){paused=!paused;this.classList.toggle('paused',paused);this.textContent=paused?'Reanudar':'Pausa';if(!paused){lastT=null;requestAnimationFrame(tick);}};
+  document.getElementById('br').onclick=function(){for(var i=0;i<particles.length;i++){particles[i].rad=particles[i].heavy?0.05+Math.random()*0.1:0.40+Math.random()*0.1;}sysAngle=0;};
+  function toggleHiro(){var p=document.getElementById('hiroPanel');p.style.display=p.style.display==='block'?'none':'block';}
 
-  /* Tapa */
-  var tapa=new THREE.Mesh(new THREE.CircleGeometry(0.62,64),new THREE.MeshPhongMaterial({color:0x051520,emissive:0x000810,specular:0x00dcff,shininess:80,transparent:true,opacity:0.6,side:THREE.DoubleSide}));
-  tapa.rotation.x=-Math.PI/2;tapa.position.y=1.02;markerGroup.add(tapa);
-  [0.45,0.28,0.12].forEach(function(r){var c=new THREE.Mesh(new THREE.TorusGeometry(r,0.005,4,32),new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.25}));c.position.y=1.03;c.rotation.x=Math.PI/2;markerGroup.add(c);});
-
-  /* Eje */
-  add(new THREE.CylinderGeometry(0.028,0.028,1.15,16),new THREE.MeshPhongMaterial({color:0xaaccdd,specular:0xffffff,shininess:200}),0,0.5,0);
-
-  /* Particulas */
-  for(var i=0;i<20;i++){
-    var isH=i<10,r2=isH?0.062:0.048,c=isH?0xff5500:0x00ffcc,em=isH?0x331100:0x007755;
-    var sph=new THREE.Mesh(new THREE.SphereGeometry(r2,18,18),new THREE.MeshPhongMaterial({color:c,emissive:em,specular:0xffffff,shininess:150}));
-    markerGroup.add(sph);particleMeshes.push(sph);
-  }
-
-  window.addEventListener('resize',function(){renderer.setSize(window.innerWidth,window.innerHeight);cam3d.aspect=window.innerWidth/window.innerHeight;cam3d.updateProjectionMatrix();});
-
-  /* ══ DETECCION DEL HIRO con jsartoolkit via canvas ══ */
-  startHiroDetection();
-  requestAnimationFrame(animate);
-}
-
-/* ══ DETECCION HIRO: analiza frames del video con jsartoolkit ══ */
-function startHiroDetection(){
-  var vid=document.getElementById('bgvid');
+  /* Marker events */
   var statusEl=document.getElementById('status');
   var hintEl=document.getElementById('hint');
+  document.getElementById('hiroMarker').addEventListener('markerFound',function(){
+    hintEl.style.display='none';
+    statusEl.textContent='Marcador detectado';
+    statusEl.style.color='#00dcff';
+    statusEl.style.borderColor='rgba(0,220,255,.4)';
+  });
+  document.getElementById('hiroMarker').addEventListener('markerLost',function(){
+    hintEl.style.display='block';
+    statusEl.textContent='Apunta al marcador Hiro';
+    statusEl.style.color='#2a4a62';
+    statusEl.style.borderColor='rgba(0,220,255,.12)';
+  });
 
-  /* Canvas oculto para analisis de imagen */
-  var detCanvas=document.createElement('canvas');
-  detCanvas.width=320;detCanvas.height=240;
-  var detCtx=detCanvas.getContext('2d');
+  document.querySelector('a-scene').addEventListener('loaded',function(){
+    /* Forzar video a pantalla completa */
+    setTimeout(function(){
+      document.querySelectorAll('video').forEach(function(v){
+        v.style.cssText='position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;';
+      });
+    },800);
+    for(var i=0;i<particles.length;i++){particles[i].el=document.getElementById(particles[i].id);}
+    compute();
+    requestAnimationFrame(tick);
+  });
 
-  /* Patron binario simplificado del marcador Hiro
-     Usamos una comparacion de bordes para detectarlo */
-  var lastSeen=0;
-  var TIMEOUT=800; /* ms sin ver el marcador antes de ocultarlo */
-
-  function detectFrame(){
-    if(!vid.videoWidth)return requestAnimationFrame(detectFrame);
-
-    detCtx.drawImage(vid,0,0,320,240);
-    var img=detCtx.getImageData(0,0,320,240);
-    var data=img.data;
-
-    /* Buscar cuadrado negro con borde blanco (patron del Hiro):
-       Analizar si hay una zona de alto contraste B/N en forma cuadrada */
-    var blackCount=0, whiteCount=0, totalPixels=320*240;
-    for(var p=0;p<data.length;p+=4){
-      var lum=data[p]*0.299+data[p+1]*0.587+data[p+2]*0.114;
-      if(lum<60)blackCount++;
-      else if(lum>180)whiteCount++;
-    }
-    var blackRatio=blackCount/totalPixels;
-    var whiteRatio=whiteCount/totalPixels;
-
-    /* El marcador Hiro tiene ~40-60% negro y ~20-35% blanco en cuadro */
-    var hiroDetected=(blackRatio>0.25&&blackRatio<0.65&&whiteRatio>0.15&&whiteRatio<0.50);
-
-    if(hiroDetected){
-      lastSeen=Date.now();
-      if(!markerGroup.visible){
-        markerGroup.visible=true;
-        hintEl.style.display='none';
-        statusEl.textContent='Marcador detectado';
-        statusEl.style.color='#00dcff';
-        statusEl.style.borderColor='rgba(0,220,255,.4)';
-      }
-    } else {
-      if(markerGroup.visible&&Date.now()-lastSeen>TIMEOUT){
-        markerGroup.visible=false;
-        hintEl.style.display='block';
-        statusEl.textContent='Apunta al marcador Hiro';
-        statusEl.style.color='#2a4a62';
-        statusEl.style.borderColor='rgba(0,220,255,.12)';
-      }
-    }
-    requestAnimationFrame(detectFrame);
+  function iniciar(){
+    document.getElementById('startScreen').style.display='none';
+    document.getElementById('arScene').style.display='block';
+    document.getElementById('hud').style.display='flex';
+    document.getElementById('status').style.display='block';
+    document.getElementById('btnHiro').style.display='block';
+    hintEl.style.display='block';
+    statusEl.textContent='Apunta al marcador Hiro';
   }
-  detectFrame();
-}
 
-function animate(){
-  requestAnimationFrame(animate);
-  if(!renderer)return;
-  clock+=0.016;
-  var v=compute(),rm=(v.r/0.6)*RMAX;
-  sysAngle+=v.w*0.016*0.3;
-  if(tambor3d)tambor3d.rotation.y=sysAngle;
-  for(var i=0;i<particles.length;i++){
-    var p=particles[i],rr=p.rad*v.r;
-    var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*0.016*speeds[i];
-    if(nr>.96)nr=.96;if(nr<.02)nr=.02;
-    p.rad=nr;p.angle+=v.w*0.016*(0.28+0.035*i)*speeds[i];
-    var rv=p.rad*rm;
-    if(particleMeshes[i]){
-      particleMeshes[i].position.set(
-        rv*Math.cos(p.angle+sysAngle*0.04),
-        0.52+yOff[i]+Math.sin(clock*1.5+i*0.7)*0.035,
-        rv*Math.sin(p.angle+sysAngle*0.04)
-      );
+  function tick(ts){
+    if(paused)return;
+    if(!lastT)lastT=ts;
+    var dt=Math.min((ts-lastT)/1000,.05);lastT=ts;
+    clock+=dt;
+    var v=compute(),rm=(v.r/0.6)*RMAX;
+    sysAngle+=v.w*dt*0.3;
+    var tambor=document.getElementById('tambor');
+    if(tambor)tambor.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
+    for(var i=0;i<particles.length;i++){
+      var p=particles[i],rr=p.rad*v.r;
+      var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*dt*speeds[i];
+      if(nr>.96)nr=.96;if(nr<.02)nr=.02;
+      p.rad=nr;p.angle+=v.w*dt*(0.28+0.035*i)*speeds[i];
+      var rv=p.rad*rm;
+      if(p.el)p.el.setAttribute('position',{
+        x:rv*Math.cos(p.angle+sysAngle*0.04),
+        y:0.52+yOff[i]+Math.sin(clock*1.5+i*0.7)*0.035,
+        z:rv*Math.sin(p.angle+sysAngle*0.04)
+      });
     }
+    requestAnimationFrame(tick);
   }
-  renderer.render(scene,cam3d);
-}
-
-/* ══ INICIAR CAMARA ══ */
-function iniciar(){
-  var vid=document.getElementById('bgvid');
-  var constraints=[
-    {video:{facingMode:{exact:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},
-    {video:{facingMode:'environment'},audio:false},
-    {video:true,audio:false}
-  ];
-  function tryNext(idx){
-    if(idx>=constraints.length){alert('No se pudo acceder a la camara.');return;}
-    navigator.mediaDevices.getUserMedia(constraints[idx])
-    .then(function(stream){
-      vid.srcObject=stream;
-      vid.onloadedmetadata=function(){
-        vid.play();
-        document.getElementById('startScreen').style.display='none';
-        document.getElementById('bgvid').style.display='block';
-        document.getElementById('arcanvas').style.display='block';
-        document.getElementById('hud').style.display='flex';
-        document.getElementById('status').style.display='block';
-        document.getElementById('status').textContent='Apunta al marcador Hiro';
-        document.getElementById('hint').style.display='block';
-        initThree();
-        compute();
-      };
-    }).catch(function(){tryNext(idx+1);});
-  }
-  tryNext(0);
-}
 </script>
 </body>
 </html>
