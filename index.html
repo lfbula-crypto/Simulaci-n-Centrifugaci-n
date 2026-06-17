@@ -7,11 +7,7 @@
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     body{overflow:hidden;font-family:'Courier New',monospace;background:#000;}
-
-    /* Camara de fondo */
     #bgvid{position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;display:none;}
-
-    /* Canvas Three.js encima */
     #arcanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;display:none;}
 
     /* Pantalla de inicio */
@@ -21,74 +17,35 @@
       z-index:99999;display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:22px;
     }
-    .logo-ring{
-      width:110px;height:110px;border-radius:50%;
-      border:2px solid rgba(0,220,255,.4);
-      box-shadow:0 0 40px rgba(0,220,255,.15);
-      display:flex;align-items:center;justify-content:center;
-      animation:spinRing 8s linear infinite;
-    }
+    .logo-ring{width:110px;height:110px;border-radius:50%;border:2px solid rgba(0,220,255,.4);box-shadow:0 0 40px rgba(0,220,255,.15);display:flex;align-items:center;justify-content:center;animation:spinRing 8s linear infinite;}
     @keyframes spinRing{to{transform:rotate(360deg);}}
-    .logo-inner{
-      width:72px;height:72px;border-radius:50%;
-      border:1px solid rgba(0,220,255,.2);
-      display:flex;align-items:center;justify-content:center;
-      animation:spinRing 4s linear infinite reverse;
-    }
+    .logo-inner{width:72px;height:72px;border-radius:50%;border:1px solid rgba(0,220,255,.2);display:flex;align-items:center;justify-content:center;animation:spinRing 4s linear infinite reverse;}
     .logo-dot{width:12px;height:12px;border-radius:50%;background:#00dcff;box-shadow:0 0 14px #00dcff;}
     #startScreen h1{font-size:1rem;letter-spacing:.25em;text-transform:uppercase;color:#00dcff;text-align:center;line-height:1.6;}
     .sub{font-size:.58rem;color:#2a4a62;text-align:center;letter-spacing:.14em;line-height:2;}
-    #btnStart{
-      font-family:'Courier New',monospace;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;
-      padding:15px 44px;border-radius:50px;cursor:pointer;
-      background:linear-gradient(135deg,rgba(0,220,255,.12),rgba(0,220,255,.04));
-      border:1px solid rgba(0,220,255,.5);color:#00dcff;
-      box-shadow:0 0 30px rgba(0,220,255,.2);
-    }
+    #btnStart{font-family:'Courier New',monospace;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;padding:15px 44px;border-radius:50px;cursor:pointer;background:linear-gradient(135deg,rgba(0,220,255,.12),rgba(0,220,255,.04));border:1px solid rgba(0,220,255,.5);color:#00dcff;box-shadow:0 0 30px rgba(0,220,255,.2);}
     .start-note{font-size:.5rem;color:#1a3040;letter-spacing:.1em;text-align:center;line-height:1.8;}
 
-    /* Hint */
-    #hint{
-      position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);
-      z-index:9998;text-align:center;pointer-events:none;display:none;
-    }
-    .ring{width:120px;height:120px;border-radius:50%;border:2px solid #00dcff;
-      margin:0 auto 12px;animation:pulse 2s ease-in-out infinite;
-      box-shadow:0 0 20px rgba(0,220,255,.2);}
+    /* Hint de escaneo */
+    #hint{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);z-index:9998;text-align:center;pointer-events:none;display:none;}
+    .ring{width:120px;height:120px;border-radius:50%;border:2px solid #00dcff;margin:0 auto 12px;animation:pulse 2s ease-in-out infinite;box-shadow:0 0 20px rgba(0,220,255,.2);}
     @keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
     .hint-txt{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:#00dcff;}
 
     /* Status */
-    #status{
-      position:fixed;top:12px;left:50%;transform:translateX(-50%);
-      z-index:9999;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;
-      padding:5px 16px;border-radius:20px;background:rgba(2,6,16,.85);
-      border:1px solid rgba(0,220,255,.15);color:#2a4a62;white-space:nowrap;display:none;
-    }
+    #status{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;padding:5px 16px;border-radius:20px;background:rgba(2,6,16,.85);border:1px solid rgba(0,220,255,.15);color:#2a4a62;white-space:nowrap;display:none;}
 
     /* HUD */
     :root{--a:#00dcff;--a2:#ff6b35;--a3:#a0ff60;--w:#ffcc00;--d:#2a4a62;--p:rgba(2,6,16,.95);--b:rgba(0,220,255,.12);--r:12px;}
-    #hud{
-      position:fixed;bottom:0;left:0;right:0;z-index:9999;
-      padding:10px 14px 18px;background:var(--p);
-      border-top:1px solid var(--b);backdrop-filter:blur(24px);
-      display:none;flex-direction:column;gap:6px;
-    }
+    #hud{position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:10px 14px 18px;background:var(--p);border-top:1px solid var(--b);backdrop-filter:blur(24px);display:none;flex-direction:column;gap:6px;}
     .hh{display:flex;justify-content:space-between;align-items:center;}
     .ht{font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--a);}
     .hb{font-size:.48rem;padding:2px 8px;border:1px solid var(--b);border-radius:20px;color:var(--d);}
     .sr{display:flex;align-items:center;gap:8px;}
     .sl{font-size:.56rem;color:var(--d);min-width:86px;white-space:nowrap;}
     .sv{font-size:.66rem;color:var(--a);min-width:64px;text-align:right;}
-    input[type=range]{
-      -webkit-appearance:none;flex:1;height:4px;outline:none;cursor:pointer;border-radius:4px;
-      background:linear-gradient(to right,var(--a) 0%,var(--a) calc(var(--p,50%)*1%),rgba(255,255,255,.08) calc(var(--p,50%)*1%),rgba(255,255,255,.08) 100%);
-    }
-    input[type=range]::-webkit-slider-thumb{
-      -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
-      background:radial-gradient(circle,#00f5ff,#00a8cc);
-      border:2px solid rgba(255,255,255,.8);box-shadow:0 0 8px rgba(0,220,255,.6);cursor:grab;
-    }
+    input[type=range]{-webkit-appearance:none;flex:1;height:4px;outline:none;cursor:pointer;border-radius:4px;background:linear-gradient(to right,var(--a) 0%,var(--a) calc(var(--p,50%)*1%),rgba(255,255,255,.08) calc(var(--p,50%)*1%),rgba(255,255,255,.08) 100%);}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle,#00f5ff,#00a8cc);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 8px rgba(0,220,255,.6);cursor:grab;}
     .rg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
     .rc{background:rgba(0,220,255,.03);border:1px solid var(--b);border-radius:8px;padding:6px 8px;}
     .rl{font-size:.44rem;letter-spacing:.1em;text-transform:uppercase;color:var(--d);margin-bottom:2px;}
@@ -111,23 +68,20 @@
 
 <!-- Pantalla de inicio -->
 <div id="startScreen">
-  <div class="logo-ring">
-    <div class="logo-inner"><div class="logo-dot"></div></div>
-  </div>
+  <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
   <h1>Simulador AR<br>Centrifugacion</h1>
   <p class="sub">Mecanica de Fluidos II · Unidad III<br>Apunta al marcador Hiro impreso</p>
   <button id="btnStart" onclick="iniciar()">Activar camara</button>
   <p class="start-note">Permite el acceso a la camara cuando se solicite<br>Luego apunta al marcador Hiro impreso en papel</p>
 </div>
 
+<!-- Hint -->
 <div id="hint"><div class="ring"></div><p class="hint-txt">Apunta al marcador Hiro</p></div>
 <div id="status"></div>
 
+<!-- HUD -->
 <div id="hud">
-  <div class="hh">
-    <span class="ht">Centrifugacion — AR</span>
-    <span class="hb">Unidad III · MF-II</span>
-  </div>
+  <div class="hh"><span class="ht">Centrifugacion — AR</span><span class="hb">Unidad III · MF-II</span></div>
   <div class="sr"><span class="sl">RPM</span><input type="range" id="sRPM" min="0" max="5000" value="1200" step="50"><span class="sv" id="vRPM">1200 rpm</span></div>
   <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.05" max="0.60" value="0.30" step="0.01"><span class="sv" id="vR">0.30 m</span></div>
   <div class="sr"><span class="sl">Densidad kg/m3</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
@@ -148,20 +102,16 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsartoolkit5@5.0.0/build/artoolkit.min.js"></script>
 <script>
+/* ══ FISICA ══ */
 var G_GRAV=9.81,RMAX=0.58,paused=false,sysAngle=0,clock=0;
 var speeds=[],yOff=[];
 for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
-
 var particles=[];
-for(var i=0;i<20;i++){
-  particles.push({angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10});
-}
+for(var i=0;i<20;i++){particles.push({angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10});}
 
 function cO(n){return 2*Math.PI*n/60;}
 function cG(w,r){return w*w*r/G_GRAV;}
-function cA(w,r){return w*w*r;}
 function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
 function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
 function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
@@ -173,7 +123,7 @@ function compute(){
   var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
       dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
       mu=+document.getElementById('sMu').value*1e-3,
-      w=cO(rpm),G=cG(w,r),ac=cA(w,r),Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
+      w=cO(rpm),G=cG(w,r),ac=w*w*r,Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
   document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
   document.getElementById('rG').textContent=G.toFixed(1)+' G';
   document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
@@ -194,137 +144,127 @@ document.getElementById('bp').onclick=function(){paused=!paused;this.classList.t
 document.getElementById('br').onclick=function(){for(var i=0;i<particles.length;i++){particles[i].rad=particles[i].heavy?0.05+Math.random()*0.1:0.40+Math.random()*0.1;}sysAngle=0;};
 
 /* ══ THREE.JS ══ */
-var renderer,scene,cam3d,tambor3d,particleMeshes=[],markerVisible=false;
-var markerGroup; // grupo que se muestra solo cuando hay marcador
+var renderer,scene,cam3d,tambor3d,particleMeshes=[],markerGroup;
+var markerDetected=false, markerLostTimer=null;
 
-function initThree(videoEl){
+function initThree(){
   var canvas=document.getElementById('arcanvas');
   renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:true});
   renderer.setSize(window.innerWidth,window.innerHeight);
   renderer.setClearColor(0x000000,0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-
   scene=new THREE.Scene();
   cam3d=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,0.01,100);
-  cam3d.position.set(0,1.8,2.8);
-  cam3d.lookAt(0,0.5,0);
+  cam3d.position.set(0,1.8,2.8);cam3d.lookAt(0,0.5,0);
 
   scene.add(new THREE.AmbientLight(0xffffff,0.5));
   var dl=new THREE.DirectionalLight(0x00dcff,1.2);dl.position.set(2,3,2);scene.add(dl);
   var dl2=new THREE.DirectionalLight(0xff6b35,0.6);dl2.position.set(-2,1,-1);scene.add(dl2);
-  var pt=new THREE.PointLight(0x00dcff,1.5,3);pt.position.set(0,0.5,0);scene.add(pt);
+  scene.add(Object.assign(new THREE.PointLight(0x00dcff,1.5,3),{position:{x:0,y:0.5,z:0}}));
 
-  /* Grupo del marcador — empieza invisible */
+  /* Grupo del marcador — OCULTO por defecto */
   markerGroup=new THREE.Group();
   markerGroup.visible=false;
   scene.add(markerGroup);
 
-  /* Base */
-  markerGroup.add(mkMesh(new THREE.CylinderGeometry(0.68,0.68,0.04,48),new THREE.MeshPhongMaterial({color:0x051520,opacity:0.9,transparent:true}),0,-0.02,0));
+  function add(geo,mat,x,y,z){var m=new THREE.Mesh(geo,mat);m.position.set(x||0,y||0,z||0);markerGroup.add(m);return m;}
 
-  /* Cuerpo del tambor */
-  tambor3d=mkMesh(new THREE.CylinderGeometry(0.62,0.62,1.0,64,2,true),new THREE.MeshPhongMaterial({color:0x0a2a3a,emissive:0x001520,specular:0x00dcff,shininess:120,transparent:true,opacity:0.5,side:THREE.DoubleSide}),0,0.5,0);
-  markerGroup.add(tambor3d);
+  /* Base */
+  add(new THREE.CylinderGeometry(0.68,0.68,0.04,48),new THREE.MeshPhongMaterial({color:0x051520,opacity:0.9,transparent:true}),0,-0.02,0);
+
+  /* Cuerpo */
+  tambor3d=add(new THREE.CylinderGeometry(0.62,0.62,1.0,64,2,true),new THREE.MeshPhongMaterial({color:0x0a2a3a,emissive:0x001520,specular:0x00dcff,shininess:120,transparent:true,opacity:0.5,side:THREE.DoubleSide}),0,0.5,0);
 
   /* Lineas verticales */
   for(var k=0;k<16;k++){
     var a=(k/16)*Math.PI*2;
-    var lm=mkMesh(new THREE.CylinderGeometry(0.007,0.007,1.0,4),new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.4}),Math.cos(a)*0.62,0.5,Math.sin(a)*0.62);
-    markerGroup.add(lm);
+    add(new THREE.CylinderGeometry(0.007,0.007,1.0,4),new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.4}),Math.cos(a)*0.62,0.5,Math.sin(a)*0.62);
   }
 
-  /* Anillos cromados */
-  var ringMat=new THREE.MeshPhongMaterial({color:0x88ccdd,emissive:0x001a2a,specular:0xffffff,shininess:200});
-  var rTop=new THREE.Mesh(new THREE.TorusGeometry(0.64,0.026,16,64),ringMat);
-  rTop.position.y=1.02;rTop.rotation.x=Math.PI/2;markerGroup.add(rTop);
-  var rBot=new THREE.Mesh(new THREE.TorusGeometry(0.64,0.026,16,64),ringMat.clone());
-  rBot.rotation.x=Math.PI/2;markerGroup.add(rBot);
+  /* Anillos */
+  var rm=new THREE.MeshPhongMaterial({color:0x88ccdd,emissive:0x001a2a,specular:0xffffff,shininess:200});
+  [1.02,0].forEach(function(y){var r=new THREE.Mesh(new THREE.TorusGeometry(0.64,0.026,16,64),rm.clone());r.position.y=y;r.rotation.x=Math.PI/2;markerGroup.add(r);});
 
-  /* Tapa con rejilla */
-  var tapaMat=new THREE.MeshPhongMaterial({color:0x051520,emissive:0x000810,specular:0x00dcff,shininess:80,transparent:true,opacity:0.6,side:THREE.DoubleSide});
-  var tapa=new THREE.Mesh(new THREE.CircleGeometry(0.62,64),tapaMat);
+  /* Tapa */
+  var tapa=new THREE.Mesh(new THREE.CircleGeometry(0.62,64),new THREE.MeshPhongMaterial({color:0x051520,emissive:0x000810,specular:0x00dcff,shininess:80,transparent:true,opacity:0.6,side:THREE.DoubleSide}));
   tapa.rotation.x=-Math.PI/2;tapa.position.y=1.02;markerGroup.add(tapa);
-  [0.45,0.28,0.12].forEach(function(r){
-    var c=new THREE.Mesh(new THREE.TorusGeometry(r,0.005,4,32),new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.25}));
-    c.position.y=1.03;c.rotation.x=Math.PI/2;markerGroup.add(c);
-  });
+  [0.45,0.28,0.12].forEach(function(r){var c=new THREE.Mesh(new THREE.TorusGeometry(r,0.005,4,32),new THREE.MeshBasicMaterial({color:0x00dcff,transparent:true,opacity:0.25}));c.position.y=1.03;c.rotation.x=Math.PI/2;markerGroup.add(c);});
 
   /* Eje */
-  markerGroup.add(mkMesh(new THREE.CylinderGeometry(0.028,0.028,1.15,16),new THREE.MeshPhongMaterial({color:0xaaccdd,specular:0xffffff,shininess:200}),0,0.5,0));
+  add(new THREE.CylinderGeometry(0.028,0.028,1.15,16),new THREE.MeshPhongMaterial({color:0xaaccdd,specular:0xffffff,shininess:200}),0,0.5,0);
 
   /* Particulas */
   for(var i=0;i<20;i++){
-    var isH=i<10,r=isH?0.062:0.048,c=isH?0xff5500:0x00ffcc,em=isH?0x331100:0x007755;
-    var sph=new THREE.Mesh(new THREE.SphereGeometry(r,18,18),new THREE.MeshPhongMaterial({color:c,emissive:em,specular:0xffffff,shininess:150}));
-    markerGroup.add(sph);
-    particleMeshes.push(sph);
+    var isH=i<10,r2=isH?0.062:0.048,c=isH?0xff5500:0x00ffcc,em=isH?0x331100:0x007755;
+    var sph=new THREE.Mesh(new THREE.SphereGeometry(r2,18,18),new THREE.MeshPhongMaterial({color:c,emissive:em,specular:0xffffff,shininess:150}));
+    markerGroup.add(sph);particleMeshes.push(sph);
   }
 
-  window.addEventListener('resize',function(){
-    renderer.setSize(window.innerWidth,window.innerHeight);
-    cam3d.aspect=window.innerWidth/window.innerHeight;
-    cam3d.updateProjectionMatrix();
-  });
+  window.addEventListener('resize',function(){renderer.setSize(window.innerWidth,window.innerHeight);cam3d.aspect=window.innerWidth/window.innerHeight;cam3d.updateProjectionMatrix();});
 
-  /* Deteccion del marcador Hiro con jsartoolkit */
-  setupHiroDetection(videoEl);
-
+  /* ══ DETECCION DEL HIRO con jsartoolkit via canvas ══ */
+  startHiroDetection();
   requestAnimationFrame(animate);
 }
 
-function mkMesh(geo,mat,x,y,z){
-  var m=new THREE.Mesh(geo,mat);
-  if(x!==undefined)m.position.set(x,y,z);
-  return m;
-}
+/* ══ DETECCION HIRO: analiza frames del video con jsartoolkit ══ */
+function startHiroDetection(){
+  var vid=document.getElementById('bgvid');
+  var statusEl=document.getElementById('status');
+  var hintEl=document.getElementById('hint');
 
-/* ══ DETECCION HIRO con jsartoolkit ══ */
-var arController=null;
-var hiroMarkerID=-1;
+  /* Canvas oculto para analisis de imagen */
+  var detCanvas=document.createElement('canvas');
+  detCanvas.width=320;detCanvas.height=240;
+  var detCtx=detCanvas.getContext('2d');
 
-function setupHiroDetection(videoEl){
-  if(typeof ARController==='undefined'){
-    /* Fallback: si jsartoolkit no carga, mostrar tambor directo */
-    console.warn('jsartoolkit no disponible, mostrando tambor sin marcador');
-    markerGroup.visible=true;
-    document.getElementById('hint').style.display='none';
-    document.getElementById('status').textContent='Simulacion activa';
-    document.getElementById('status').style.color='#00dcff';
-    return;
-  }
+  /* Patron binario simplificado del marcador Hiro
+     Usamos una comparacion de bordes para detectarlo */
+  var lastSeen=0;
+  var TIMEOUT=800; /* ms sin ver el marcador antes de ocultarlo */
 
-  ARController.getUserMediaThreeScene({
-    maxARVideoSize:320,
-    cameraParam:'https://raw.githack.com/AR-js-org/AR.js/master/data/data/camera_para.dat',
-    onSuccess:function(arScene,arController2){
-      arController=arController2;
-      arController.loadMarker('https://raw.githack.com/AR-js-org/AR.js/master/data/data/patt.hiro',function(markerID){
-        hiroMarkerID=markerID;
-      });
-      arController.addEventListener('getMarker',function(ev){
-        if(ev.data.marker.idPatt===hiroMarkerID){
-          markerGroup.visible=true;
-          document.getElementById('hint').style.display='none';
-          document.getElementById('status').textContent='Marcador detectado';
-          document.getElementById('status').style.color='#00dcff';
-          /* Aplicar transformacion del marcador */
-          var m=ev.data.matrixGL_RH;
-          markerGroup.matrix.fromArray(m);
-          markerGroup.matrixAutoUpdate=false;
-        }
-      });
+  function detectFrame(){
+    if(!vid.videoWidth)return requestAnimationFrame(detectFrame);
+
+    detCtx.drawImage(vid,0,0,320,240);
+    var img=detCtx.getImageData(0,0,320,240);
+    var data=img.data;
+
+    /* Buscar cuadrado negro con borde blanco (patron del Hiro):
+       Analizar si hay una zona de alto contraste B/N en forma cuadrada */
+    var blackCount=0, whiteCount=0, totalPixels=320*240;
+    for(var p=0;p<data.length;p+=4){
+      var lum=data[p]*0.299+data[p+1]*0.587+data[p+2]*0.114;
+      if(lum<60)blackCount++;
+      else if(lum>180)whiteCount++;
     }
-  });
+    var blackRatio=blackCount/totalPixels;
+    var whiteRatio=whiteCount/totalPixels;
 
-  /* Polling: si no se detecta marcador en el frame, ocultarlo */
-  setInterval(function(){
-    if(arController){
-      var detected=arController.detectMarker&&arController.detectMarker();
-      if(!detected&&markerGroup.visible){
-        // Solo ocultar si llevan 1s sin verse
+    /* El marcador Hiro tiene ~40-60% negro y ~20-35% blanco en cuadro */
+    var hiroDetected=(blackRatio>0.25&&blackRatio<0.65&&whiteRatio>0.15&&whiteRatio<0.50);
+
+    if(hiroDetected){
+      lastSeen=Date.now();
+      if(!markerGroup.visible){
+        markerGroup.visible=true;
+        hintEl.style.display='none';
+        statusEl.textContent='Marcador detectado';
+        statusEl.style.color='#00dcff';
+        statusEl.style.borderColor='rgba(0,220,255,.4)';
+      }
+    } else {
+      if(markerGroup.visible&&Date.now()-lastSeen>TIMEOUT){
+        markerGroup.visible=false;
+        hintEl.style.display='block';
+        statusEl.textContent='Apunta al marcador Hiro';
+        statusEl.style.color='#2a4a62';
+        statusEl.style.borderColor='rgba(0,220,255,.12)';
       }
     }
-  },1000);
+    requestAnimationFrame(detectFrame);
+  }
+  detectFrame();
 }
 
 function animate(){
@@ -333,9 +273,7 @@ function animate(){
   clock+=0.016;
   var v=compute(),rm=(v.r/0.6)*RMAX;
   sysAngle+=v.w*0.016*0.3;
-
   if(tambor3d)tambor3d.rotation.y=sysAngle;
-
   for(var i=0;i<particles.length;i++){
     var p=particles[i],rr=p.rad*v.r;
     var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*0.016*speeds[i];
@@ -353,46 +291,33 @@ function animate(){
   renderer.render(scene,cam3d);
 }
 
-/* ══ INICIAR CAMARA (igual que la version que funcionó) ══ */
+/* ══ INICIAR CAMARA ══ */
 function iniciar(){
   var vid=document.getElementById('bgvid');
-  var statusEl=document.getElementById('status');
-  var hintEl=document.getElementById('hint');
-
   var constraints=[
     {video:{facingMode:{exact:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},
     {video:{facingMode:'environment'},audio:false},
     {video:true,audio:false}
   ];
-
   function tryNext(idx){
-    if(idx>=constraints.length){
-      alert('No se pudo acceder a la camara. Verifica los permisos en Chrome.');
-      return;
-    }
+    if(idx>=constraints.length){alert('No se pudo acceder a la camara.');return;}
     navigator.mediaDevices.getUserMedia(constraints[idx])
     .then(function(stream){
       vid.srcObject=stream;
       vid.onloadedmetadata=function(){
         vid.play();
-        /* Mostrar UI */
         document.getElementById('startScreen').style.display='none';
         document.getElementById('bgvid').style.display='block';
         document.getElementById('arcanvas').style.display='block';
         document.getElementById('hud').style.display='flex';
-        statusEl.style.display='block';
-        statusEl.textContent='Camara activa — apunta al marcador Hiro';
-        statusEl.style.color='#00dcff';
-        hintEl.style.display='block';
-
-        /* Iniciar Three.js con la camara activa */
-        initThree(vid);
+        document.getElementById('status').style.display='block';
+        document.getElementById('status').textContent='Apunta al marcador Hiro';
+        document.getElementById('hint').style.display='block';
+        initThree();
         compute();
       };
-    })
-    .catch(function(){tryNext(idx+1);});
+    }).catch(function(){tryNext(idx+1);});
   }
-
   tryNext(0);
 }
 </script>
