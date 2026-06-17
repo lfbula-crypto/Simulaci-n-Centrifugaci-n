@@ -8,36 +8,55 @@
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{overflow:hidden;font-family:'Courier New',monospace;background:#000;}
+    body{overflow:hidden;font-family:'Courier New',monospace;}
 
-    /* Pantalla de inicio */
+    /* ── Pantalla de inicio encima de todo ── */
     #startScreen{
-      position:fixed;inset:0;
+      position:fixed;inset:0;z-index:99999;
       background:linear-gradient(160deg,#000 0%,#020d1a 60%,#000 100%);
-      z-index:99999;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:22px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
     }
-    .logo-ring{width:110px;height:110px;border-radius:50%;border:2px solid rgba(0,220,255,.4);box-shadow:0 0 40px rgba(0,220,255,.15);display:flex;align-items:center;justify-content:center;animation:spinRing 8s linear infinite;}
-    @keyframes spinRing{to{transform:rotate(360deg);}}
-    .logo-inner{width:72px;height:72px;border-radius:50%;border:1px solid rgba(0,220,255,.2);display:flex;align-items:center;justify-content:center;animation:spinRing 4s linear infinite reverse;}
+    .logo-ring{width:110px;height:110px;border-radius:50%;border:2px solid rgba(0,220,255,.4);box-shadow:0 0 40px rgba(0,220,255,.15);display:flex;align-items:center;justify-content:center;animation:spin 8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .logo-inner{width:72px;height:72px;border-radius:50%;border:1px solid rgba(0,220,255,.2);display:flex;align-items:center;justify-content:center;animation:spin 4s linear infinite reverse;}
     .logo-dot{width:12px;height:12px;border-radius:50%;background:#00dcff;box-shadow:0 0 14px #00dcff;}
     #startScreen h1{font-size:1rem;letter-spacing:.25em;text-transform:uppercase;color:#00dcff;text-align:center;line-height:1.6;}
     .sub{font-size:.58rem;color:#2a4a62;text-align:center;letter-spacing:.14em;line-height:2;}
-    #btnStart{font-family:'Courier New',monospace;font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;padding:15px 44px;border-radius:50px;cursor:pointer;background:linear-gradient(135deg,rgba(0,220,255,.12),rgba(0,220,255,.04));border:1px solid rgba(0,220,255,.5);color:#00dcff;box-shadow:0 0 30px rgba(0,220,255,.2);}
-    .start-note{font-size:.5rem;color:#1a3040;letter-spacing:.1em;text-align:center;line-height:1.8;}
+    #btnStart{
+      font-family:'Courier New',monospace;font-size:.75rem;letter-spacing:.2em;
+      text-transform:uppercase;padding:15px 44px;border-radius:50px;cursor:pointer;
+      background:linear-gradient(135deg,rgba(0,220,255,.12),rgba(0,220,255,.04));
+      border:1px solid rgba(0,220,255,.5);color:#00dcff;
+      box-shadow:0 0 30px rgba(0,220,255,.2);
+    }
+    .note{font-size:.5rem;color:#1a3040;letter-spacing:.1em;text-align:center;line-height:1.8;}
 
-    /* Hint */
-    #hint{position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);z-index:9998;text-align:center;pointer-events:none;display:none;}
-    .ring{width:120px;height:120px;border-radius:50%;border:2px solid #00dcff;margin:0 auto 12px;animation:pulse 2s ease-in-out infinite;box-shadow:0 0 20px rgba(0,220,255,.2);}
+    /* ── Hint ── */
+    #hint{
+      position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);
+      z-index:9998;text-align:center;pointer-events:none;display:none;
+    }
+    .ring{width:120px;height:120px;border-radius:50%;border:2px solid #00dcff;
+      margin:0 auto 12px;animation:pulse 2s ease-in-out infinite;
+      box-shadow:0 0 20px rgba(0,220,255,.2);}
     @keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
     .hint-txt{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:#00dcff;}
 
-    /* Status */
-    #status{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:9999;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;padding:5px 16px;border-radius:20px;background:rgba(2,6,16,.85);border:1px solid rgba(0,220,255,.15);color:#2a4a62;white-space:nowrap;display:none;}
+    /* ── Status ── */
+    #status{
+      position:fixed;top:12px;left:50%;transform:translateX(-50%);
+      z-index:9999;font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;
+      padding:5px 16px;border-radius:20px;background:rgba(2,6,16,.85);
+      border:1px solid rgba(0,220,255,.15);color:#2a4a62;white-space:nowrap;display:none;
+    }
 
-    /* HUD */
+    /* ── HUD ── */
     :root{--a:#00dcff;--a2:#ff6b35;--a3:#a0ff60;--w:#ffcc00;--d:#2a4a62;--p:rgba(2,6,16,.95);--b:rgba(0,220,255,.12);--r:12px;}
-    #hud{position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:10px 14px 18px;background:var(--p);border-top:1px solid var(--b);backdrop-filter:blur(24px);display:none;flex-direction:column;gap:6px;}
+    #hud{
+      position:fixed;bottom:0;left:0;right:0;z-index:9999;
+      padding:10px 14px 18px;background:var(--p);border-top:1px solid var(--b);
+      backdrop-filter:blur(24px);display:none;flex-direction:column;gap:6px;
+    }
     .hh{display:flex;justify-content:space-between;align-items:center;}
     .ht{font-size:.55rem;letter-spacing:.22em;text-transform:uppercase;color:var(--a);}
     .hb{font-size:.48rem;padding:2px 8px;border:1px solid var(--b);border-radius:20px;color:var(--d);}
@@ -59,260 +78,208 @@
     #bp{border:1px solid var(--a2);color:var(--a2);}
     #bp.paused{border-color:var(--a);color:var(--a);}
     #br{border:1px solid var(--d);color:var(--d);}
-
-    /* Panel marcador Hiro para imprimir */
-    #hiroPanel{position:fixed;bottom:80px;right:10px;z-index:9999;background:rgba(2,6,16,.95);border:1px solid rgba(0,220,255,.2);border-radius:10px;padding:8px;display:none;text-align:center;}
-    #hiroPanel p{font-size:.4rem;color:#2a4a62;margin-top:4px;letter-spacing:.1em;text-transform:uppercase;}
-    #btnHiro{position:fixed;top:12px;right:10px;z-index:9999;font-family:'Courier New',monospace;font-size:.45rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:8px;cursor:pointer;background:rgba(2,6,16,.85);border:1px solid rgba(0,220,255,.2);color:rgba(0,220,255,.6);display:none;}
   </style>
 </head>
 <body>
 
-<!-- ESCENA AR.js — usa la camara trasera del celular -->
-<a-scene
-  id="arScene"
-  arjs="sourceType:webcam; facingMode:environment; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3; trackingMethod:best;"
-  vr-mode-ui="enabled:false"
-  renderer="antialias:true; alpha:true; logarithmicDepthBuffer:true;"
-  loading-screen="enabled:false"
-  style="display:none;"
->
-  <a-entity camera></a-entity>
+  <!-- AR.js corre desde el inicio — la camara se activa en segundo plano -->
+  <a-scene
+    arjs="sourceType:webcam; facingMode:environment; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3; trackingMethod:best;"
+    vr-mode-ui="enabled:false"
+    renderer="antialias:true; alpha:true; logarithmicDepthBuffer:true;"
+    loading-screen="enabled:false"
+  >
+    <a-entity camera></a-entity>
 
-  <a-marker preset="hiro" id="hiroMarker">
+    <a-marker preset="hiro" id="hiroMarker">
 
-    <!-- Base del tambor -->
-    <a-cylinder position="0 0.02 0" radius="0.68" height="0.04"
-      color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
+      <a-cylinder position="0 0.02 0" radius="0.68" height="0.04" color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
+      <a-cylinder id="tambor" position="0 0.52 0" radius="0.62" height="1.0" color="#0a2a3a" opacity="0.5" side="double" segments-radial="64" material="metalness:0.8;roughness:0.2;emissive:#001520;"></a-cylinder>
 
-    <!-- Cuerpo principal -->
-    <a-cylinder id="tambor" position="0 0.52 0" radius="0.62" height="1.0"
-      color="#0a2a3a" opacity="0.5" side="double" segments-radial="64"
-      material="metalness:0.8; roughness:0.2; emissive:#001520;"></a-cylinder>
+      <a-cylinder position="0.62 0.52 0"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="-0.62 0.52 0"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0 0.52 0.62"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0 0.52 -0.62"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0.44 0.52 0.44"   radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+      <a-cylinder position="-0.44 0.52 0.44"  radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+      <a-cylinder position="0.44 0.52 -0.44"  radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+      <a-cylinder position="-0.44 0.52 -0.44" radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
 
-    <!-- Lineas verticales -->
-    <a-cylinder position="0.62 0.52 0"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
-    <a-cylinder position="-0.62 0.52 0"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
-    <a-cylinder position="0 0.52 0.62"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
-    <a-cylinder position="0 0.52 -0.62"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
-    <a-cylinder position="0.44 0.52 0.44"   radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
-    <a-cylinder position="-0.44 0.52 0.44"  radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
-    <a-cylinder position="0.44 0.52 -0.44"  radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
-    <a-cylinder position="-0.44 0.52 -0.44" radius="0.008" height="1.0" color="#00dcff" opacity="0.3"></a-cylinder>
+      <a-torus position="0 1.02 0" radius="0.64" radius-tubular="0.026" color="#88ccdd" segments-tubular="64" material="metalness:0.9;roughness:0.1;"></a-torus>
+      <a-torus position="0 0.02 0" radius="0.64" radius-tubular="0.026" color="#88ccdd" segments-tubular="64" material="metalness:0.9;roughness:0.1;"></a-torus>
 
-    <!-- Anillos cromados -->
-    <a-torus position="0 1.02 0" radius="0.64" radius-tubular="0.026"
-      color="#88ccdd" segments-tubular="64" material="metalness:0.9;roughness:0.1;"></a-torus>
-    <a-torus position="0 0.02 0" radius="0.64" radius-tubular="0.026"
-      color="#88ccdd" segments-tubular="64" material="metalness:0.9;roughness:0.1;"></a-torus>
+      <a-circle position="0 1.02 0" rotation="-90 0 0" radius="0.62" color="#051520" opacity="0.6" material="metalness:0.6;roughness:0.3;"></a-circle>
+      <a-torus position="0 1.03 0" radius="0.45" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
+      <a-torus position="0 1.03 0" radius="0.28" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
+      <a-torus position="0 1.03 0" radius="0.12" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
 
-    <!-- Tapa superior con rejilla -->
-    <a-circle position="0 1.02 0" rotation="-90 0 0" radius="0.62"
-      color="#051520" opacity="0.6" material="metalness:0.6;roughness:0.3;"></a-circle>
-    <a-torus position="0 1.03 0" radius="0.45" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
-    <a-torus position="0 1.03 0" radius="0.28" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
-    <a-torus position="0 1.03 0" radius="0.12" radius-tubular="0.005" color="#00dcff" opacity="0.3" rotation="-90 0 0"></a-torus>
+      <a-cylinder position="0 0.52 0" radius="0.028" height="1.15" color="#aaccdd" material="metalness:0.95;roughness:0.05;"></a-cylinder>
 
-    <!-- Eje central -->
-    <a-cylinder position="0 0.52 0" radius="0.028" height="1.15"
-      color="#aaccdd" material="metalness:0.95;roughness:0.05;"></a-cylinder>
+      <a-sphere id="p0"  radius="0.062" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p1"  radius="0.062" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p2"  radius="0.062" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p3"  radius="0.062" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p4"  radius="0.055" color="#ff4400" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p5"  radius="0.055" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p6"  radius="0.058" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p7"  radius="0.058" color="#ff4400" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p8"  radius="0.052" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p9"  radius="0.052" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
 
-    <!-- 10 Particulas pesadas naranja -->
-    <a-sphere id="p0"  radius="0.062" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p1"  radius="0.062" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p2"  radius="0.062" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p3"  radius="0.062" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p4"  radius="0.055" color="#ff4400" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p5"  radius="0.055" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p6"  radius="0.058" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p7"  radius="0.058" color="#ff4400" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p8"  radius="0.052" color="#ff5500" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
-    <a-sphere id="p9"  radius="0.052" color="#ff6b35" material="metalness:0.5;roughness:0.3;emissive:#331100;"></a-sphere>
+      <a-sphere id="p10" radius="0.048" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p11" radius="0.048" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p12" radius="0.044" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p13" radius="0.044" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p14" radius="0.050" color="#00ddaa" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p15" radius="0.050" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p16" radius="0.046" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p17" radius="0.046" color="#00ddaa" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p18" radius="0.042" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-sphere id="p19" radius="0.042" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
 
-    <!-- 10 Particulas livianas cian -->
-    <a-sphere id="p10" radius="0.048" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p11" radius="0.048" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p12" radius="0.044" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p13" radius="0.044" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p14" radius="0.050" color="#00ddaa" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p15" radius="0.050" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p16" radius="0.046" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p17" radius="0.046" color="#00ddaa" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p18" radius="0.042" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
-    <a-sphere id="p19" radius="0.042" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
+      <a-text id="lblG" value="G = -"  position="0 1.35 0" align="center" color="#00dcff" width="3.2"></a-text>
+      <a-text id="lblV" value="Vm = -" position="0 1.18 0" align="center" color="#a0ff60" width="3.2"></a-text>
+    </a-marker>
+  </a-scene>
 
-    <!-- Etiquetas -->
-    <a-text id="lblG" value="G = -"  position="0 1.35 0" align="center" color="#00dcff" width="3.2"></a-text>
-    <a-text id="lblV" value="Vm = -" position="0 1.18 0" align="center" color="#a0ff60" width="3.2"></a-text>
-
-  </a-marker>
-</a-scene>
-
-<!-- Pantalla de inicio -->
-<div id="startScreen">
-  <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
-  <h1>Simulador AR<br>Centrifugacion</h1>
-  <p class="sub">Mecanica de Fluidos II · Unidad III<br>Apunta al marcador Hiro impreso en papel</p>
-  <button id="btnStart" onclick="iniciar()">Activar camara</button>
-  <p class="start-note">
-    Permite el acceso a la camara cuando se solicite<br>
-    El tambor aparece al apuntar al marcador Hiro impreso
-  </p>
-</div>
-
-<div id="hint"><div class="ring"></div><p class="hint-txt">Apunta al marcador Hiro</p></div>
-<div id="status"></div>
-<button id="btnHiro" onclick="toggleHiro()">Ver Hiro</button>
-
-<!-- Panel con el marcador Hiro correcto para imprimir -->
-<div id="hiroPanel">
-  <svg width="160" height="160" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-    <rect width="200" height="200" fill="white"/>
-    <rect x="10" y="10" width="180" height="180" fill="black"/>
-    <rect x="26" y="26" width="148" height="148" fill="white"/>
-    <rect x="38" y="38" width="124" height="124" fill="black"/>
-    <rect x="44" y="44" width="24" height="10" fill="white"/>
-    <rect x="44" y="58" width="34" height="10" fill="white"/>
-    <rect x="44" y="72" width="20" height="10" fill="white"/>
-    <rect x="44" y="86" width="28" height="10" fill="white"/>
-    <rect x="44" y="100" width="16" height="10" fill="white"/>
-    <rect x="86" y="44" width="48" height="24" fill="white"/>
-    <rect x="86" y="76" width="24" height="10" fill="white"/>
-    <rect x="86" y="90" width="48" height="18" fill="white"/>
-    <rect x="86" y="116" width="30" height="10" fill="white"/>
-    <rect x="44" y="116" width="88" height="10" fill="white"/>
-    <rect x="44" y="130" width="58" height="12" fill="white"/>
-    <rect x="116" y="116" width="26" height="26" fill="white"/>
-  </svg>
-  <p>Este es el marcador correcto</p>
-</div>
-
-<!-- HUD -->
-<div id="hud">
-  <div class="hh"><span class="ht">Centrifugacion — AR</span><span class="hb">Unidad III · MF-II</span></div>
-  <div class="sr"><span class="sl">RPM</span><input type="range" id="sRPM" min="0" max="5000" value="1200" step="50"><span class="sv" id="vRPM">1200 rpm</span></div>
-  <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.05" max="0.60" value="0.30" step="0.01"><span class="sv" id="vR">0.30 m</span></div>
-  <div class="sr"><span class="sl">Densidad kg/m3</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
-  <div class="sr"><span class="sl">d_p (um)</span><input type="range" id="sDp" min="1" max="200" value="50" step="1"><span class="sv" id="vDp">50 um</span></div>
-  <div class="sr"><span class="sl">viscosidad mPas</span><input type="range" id="sMu" min="0.5" max="100" value="1.0" step="0.5"><span class="sv" id="vMu">1.0 mPas</span></div>
-  <div class="rg">
-    <div class="rc"><div class="rl">omega rad/s</div><div class="rv"  id="rOmega">-</div></div>
-    <div class="rc"><div class="rl">Factor G</div>  <div class="rv g" id="rG">-</div></div>
-    <div class="rc"><div class="rl">Fuerza Fc</div> <div class="rv o" id="rFc">-</div></div>
-    <div class="rc"><div class="rl">V. Migrac.</div><div class="rv g" id="rVm">-</div></div>
-    <div class="rc"><div class="rl">ac m/s2</div>   <div class="rv"   id="rAc">-</div></div>
-    <div class="rc"><div class="rl">Zona Sep.</div> <div class="rv w" id="rZona">-</div></div>
+  <!-- Pantalla de inicio — tapa la camara hasta que el usuario toque -->
+  <div id="startScreen">
+    <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
+    <h1>Simulador AR<br>Centrifugacion</h1>
+    <p class="sub">Mecanica de Fluidos II · Unidad III<br>Imprime el marcador Hiro y apunta la camara</p>
+    <button id="btnStart" onclick="iniciar()">Iniciar</button>
+    <p class="note">Al tocar Iniciar se activara la camara trasera<br>Apunta al marcador Hiro impreso en papel</p>
   </div>
-  <div class="hf">
-    <div class="fm"><span>G</span>=w²r/g | <span>Vm</span>=d²Δρw²r/18μ | <span>w</span>=2πN/60</div>
-    <div class="bs"><button id="br">Reset</button><button id="bp">Pausa</button></div>
+
+  <div id="hint"><div class="ring"></div><p class="hint-txt">Apunta al marcador Hiro</p></div>
+  <div id="status"></div>
+
+  <div id="hud">
+    <div class="hh"><span class="ht">Centrifugacion — AR</span><span class="hb">Unidad III · MF-II</span></div>
+    <div class="sr"><span class="sl">RPM</span><input type="range" id="sRPM" min="0" max="5000" value="1200" step="50"><span class="sv" id="vRPM">1200 rpm</span></div>
+    <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.05" max="0.60" value="0.30" step="0.01"><span class="sv" id="vR">0.30 m</span></div>
+    <div class="sr"><span class="sl">Densidad kg/m3</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
+    <div class="sr"><span class="sl">d_p (um)</span><input type="range" id="sDp" min="1" max="200" value="50" step="1"><span class="sv" id="vDp">50 um</span></div>
+    <div class="sr"><span class="sl">viscosidad mPas</span><input type="range" id="sMu" min="0.5" max="100" value="1.0" step="0.5"><span class="sv" id="vMu">1.0 mPas</span></div>
+    <div class="rg">
+      <div class="rc"><div class="rl">omega rad/s</div><div class="rv"  id="rOmega">-</div></div>
+      <div class="rc"><div class="rl">Factor G</div>  <div class="rv g" id="rG">-</div></div>
+      <div class="rc"><div class="rl">Fuerza Fc</div> <div class="rv o" id="rFc">-</div></div>
+      <div class="rc"><div class="rl">V. Migrac.</div><div class="rv g" id="rVm">-</div></div>
+      <div class="rc"><div class="rl">ac m/s2</div>   <div class="rv"   id="rAc">-</div></div>
+      <div class="rc"><div class="rl">Zona Sep.</div> <div class="rv w" id="rZona">-</div></div>
+    </div>
+    <div class="hf">
+      <div class="fm"><span>G</span>=w²r/g | <span>Vm</span>=d²Δρw²r/18μ | <span>w</span>=2πN/60</div>
+      <div class="bs"><button id="br">Reset</button><button id="bp">Pausa</button></div>
+    </div>
   </div>
-</div>
 
-<script>
-  var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0,clock=0;
-  var speeds=[],yOff=[];
-  for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
-  var particles=[];
-  for(var i=0;i<20;i++){particles.push({id:'p'+i,angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10,el:null});}
+  <script>
+    var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0,clock=0;
+    var speeds=[],yOff=[];
+    for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
+    var particles=[];
+    for(var i=0;i<20;i++){particles.push({id:'p'+i,angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10,el:null});}
 
-  function cO(n){return 2*Math.PI*n/60;}
-  function cG(w,r){return w*w*r/G_GRAV;}
-  function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
-  function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
-  function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
-  function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
-  function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
-  function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
+    function cO(n){return 2*Math.PI*n/60;}
+    function cG(w,r){return w*w*r/G_GRAV;}
+    function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
+    function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
+    function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
+    function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
+    function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
+    function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
 
-  function compute(){
-    var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
-        dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
-        mu=+document.getElementById('sMu').value*1e-3,
-        w=cO(rpm),G=cG(w,r),ac=w*w*r,Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
-    document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
-    document.getElementById('rG').textContent=G.toFixed(1)+' G';
-    document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
-    document.getElementById('rVm').textContent=fV(Vm);
-    document.getElementById('rFc').textContent=fF(Fc);
-    document.getElementById('rZona').textContent=zG(G);
-    document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
-    document.getElementById('lblG').setAttribute('value','G = '+G.toFixed(0));
-    document.getElementById('lblV').setAttribute('value','Vm = '+fV(Vm));
-    return{w:w,r:r,dr:dr,dp:dp,mu:mu};
-  }
-
-  ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
-  document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
-  document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
-  document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
-  document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
-  document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
-  document.getElementById('bp').onclick=function(){paused=!paused;this.classList.toggle('paused',paused);this.textContent=paused?'Reanudar':'Pausa';if(!paused){lastT=null;requestAnimationFrame(tick);}};
-  document.getElementById('br').onclick=function(){for(var i=0;i<particles.length;i++){particles[i].rad=particles[i].heavy?0.05+Math.random()*0.1:0.40+Math.random()*0.1;}sysAngle=0;};
-  function toggleHiro(){var p=document.getElementById('hiroPanel');p.style.display=p.style.display==='block'?'none':'block';}
-
-  /* Marker events */
-  var statusEl=document.getElementById('status');
-  var hintEl=document.getElementById('hint');
-  document.getElementById('hiroMarker').addEventListener('markerFound',function(){
-    hintEl.style.display='none';
-    statusEl.textContent='Marcador detectado';
-    statusEl.style.color='#00dcff';
-    statusEl.style.borderColor='rgba(0,220,255,.4)';
-  });
-  document.getElementById('hiroMarker').addEventListener('markerLost',function(){
-    hintEl.style.display='block';
-    statusEl.textContent='Apunta al marcador Hiro';
-    statusEl.style.color='#2a4a62';
-    statusEl.style.borderColor='rgba(0,220,255,.12)';
-  });
-
-  document.querySelector('a-scene').addEventListener('loaded',function(){
-    /* Forzar video a pantalla completa */
-    setTimeout(function(){
-      document.querySelectorAll('video').forEach(function(v){
-        v.style.cssText='position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;';
-      });
-    },800);
-    for(var i=0;i<particles.length;i++){particles[i].el=document.getElementById(particles[i].id);}
-    compute();
-    requestAnimationFrame(tick);
-  });
-
-  function iniciar(){
-    document.getElementById('startScreen').style.display='none';
-    document.getElementById('arScene').style.display='block';
-    document.getElementById('hud').style.display='flex';
-    document.getElementById('status').style.display='block';
-    document.getElementById('btnHiro').style.display='block';
-    hintEl.style.display='block';
-    statusEl.textContent='Apunta al marcador Hiro';
-  }
-
-  function tick(ts){
-    if(paused)return;
-    if(!lastT)lastT=ts;
-    var dt=Math.min((ts-lastT)/1000,.05);lastT=ts;
-    clock+=dt;
-    var v=compute(),rm=(v.r/0.6)*RMAX;
-    sysAngle+=v.w*dt*0.3;
-    var tambor=document.getElementById('tambor');
-    if(tambor)tambor.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
-    for(var i=0;i<particles.length;i++){
-      var p=particles[i],rr=p.rad*v.r;
-      var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*dt*speeds[i];
-      if(nr>.96)nr=.96;if(nr<.02)nr=.02;
-      p.rad=nr;p.angle+=v.w*dt*(0.28+0.035*i)*speeds[i];
-      var rv=p.rad*rm;
-      if(p.el)p.el.setAttribute('position',{
-        x:rv*Math.cos(p.angle+sysAngle*0.04),
-        y:0.52+yOff[i]+Math.sin(clock*1.5+i*0.7)*0.035,
-        z:rv*Math.sin(p.angle+sysAngle*0.04)
-      });
+    function compute(){
+      var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
+          dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
+          mu=+document.getElementById('sMu').value*1e-3,
+          w=cO(rpm),G=cG(w,r),ac=w*w*r,Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
+      document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
+      document.getElementById('rG').textContent=G.toFixed(1)+' G';
+      document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
+      document.getElementById('rVm').textContent=fV(Vm);
+      document.getElementById('rFc').textContent=fF(Fc);
+      document.getElementById('rZona').textContent=zG(G);
+      document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
+      document.getElementById('lblG').setAttribute('value','G = '+G.toFixed(0));
+      document.getElementById('lblV').setAttribute('value','Vm = '+fV(Vm));
+      return{w:w,r:r,dr:dr,dp:dp,mu:mu};
     }
-    requestAnimationFrame(tick);
-  }
-</script>
+
+    ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
+    document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
+    document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
+    document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
+    document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
+    document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
+    document.getElementById('bp').onclick=function(){paused=!paused;this.classList.toggle('paused',paused);this.textContent=paused?'Reanudar':'Pausa';if(!paused){lastT=null;requestAnimationFrame(tick);}};
+    document.getElementById('br').onclick=function(){for(var i=0;i<particles.length;i++){particles[i].rad=particles[i].heavy?0.05+Math.random()*0.1:0.40+Math.random()*0.1;}sysAngle=0;};
+
+    var statusEl=document.getElementById('status');
+    var hintEl=document.getElementById('hint');
+
+    document.getElementById('hiroMarker').addEventListener('markerFound',function(){
+      hintEl.style.display='none';
+      statusEl.textContent='Marcador detectado';
+      statusEl.style.color='#00dcff';
+      statusEl.style.borderColor='rgba(0,220,255,.4)';
+    });
+    document.getElementById('hiroMarker').addEventListener('markerLost',function(){
+      hintEl.style.display='block';
+      statusEl.textContent='Apunta al marcador Hiro';
+      statusEl.style.color='#2a4a62';
+      statusEl.style.borderColor='rgba(0,220,255,.12)';
+    });
+
+    /* AR.js ya esta corriendo — cuando el usuario toca Iniciar
+       solo quitamos la pantalla de inicio y mostramos el HUD */
+    function iniciar(){
+      document.getElementById('startScreen').style.display='none';
+      document.getElementById('hud').style.display='flex';
+      statusEl.style.display='block';
+      hintEl.style.display='block';
+      statusEl.textContent='Apunta al marcador Hiro';
+
+      /* Forzar video a pantalla completa */
+      setTimeout(function(){
+        document.querySelectorAll('video').forEach(function(v){
+          v.style.cssText='position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;';
+        });
+      },500);
+    }
+
+    document.querySelector('a-scene').addEventListener('loaded',function(){
+      /* Popup de permiso ya fue disparado por AR.js al cargar la pagina */
+      for(var i=0;i<particles.length;i++){particles[i].el=document.getElementById(particles[i].id);}
+      compute();
+      requestAnimationFrame(tick);
+    });
+
+    function tick(ts){
+      if(paused)return;
+      if(!lastT)lastT=ts;
+      var dt=Math.min((ts-lastT)/1000,.05);lastT=ts;
+      clock+=dt;
+      var v=compute(),rm=(v.r/0.6)*RMAX;
+      sysAngle+=v.w*dt*0.3;
+      var t=document.getElementById('tambor');
+      if(t)t.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
+      for(var i=0;i<particles.length;i++){
+        var p=particles[i],rr=p.rad*v.r;
+        var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*dt*speeds[i];
+        if(nr>.96)nr=.96;if(nr<.02)nr=.02;
+        p.rad=nr;p.angle+=v.w*dt*(0.28+0.035*i)*speeds[i];
+        var rv=p.rad*rm;
+        if(p.el)p.el.setAttribute('position',{
+          x:rv*Math.cos(p.angle+sysAngle*0.04),
+          y:0.52+yOff[i]+Math.sin(clock*1.5+i*0.7)*0.035,
+          z:rv*Math.sin(p.angle+sysAngle*0.04)
+        });
+      }
+      requestAnimationFrame(tick);
+    }
+  </script>
 </body>
 </html>
