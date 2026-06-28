@@ -8,7 +8,11 @@
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{overflow:hidden;font-family:'Courier New',monospace;}
+    body{overflow:hidden;font-family:'Courier New',monospace; background-color: #000;}
+
+    /* Fuerza que el video de AR.js ocupe toda la pantalla sin romper el layout */
+    .a-canvas { z-index: 1 !important; }
+    video { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; z-index: 0 !important; }
 
     /* ── Pantalla de inicio encima de todo ── */
     #startScreen{
@@ -82,7 +86,6 @@
 </head>
 <body>
 
-  <!-- AR.js corre desde el inicio — la camara se activa en segundo plano -->
   <a-scene
     arjs="sourceType:webcam; facingMode:environment; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3; trackingMethod:best;"
     vr-mode-ui="enabled:false"
@@ -92,7 +95,6 @@
     <a-entity camera></a-entity>
 
     <a-marker preset="hiro" id="hiroMarker">
-
       <a-cylinder position="0 0.02 0" radius="0.68" height="0.04" color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
       <a-cylinder id="tambor" position="0 0.52 0" radius="0.62" height="1.0" color="#0a2a3a" opacity="0.5" side="double" segments-radial="64" material="metalness:0.8;roughness:0.2;emissive:#001520;"></a-cylinder>
 
@@ -137,12 +139,11 @@
       <a-sphere id="p18" radius="0.042" color="#00ffcc" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
       <a-sphere id="p19" radius="0.042" color="#00eebb" material="metalness:0.4;roughness:0.4;emissive:#007755;"></a-sphere>
 
-      <a-text id="lblG" value="G = -"  position="0 1.35 0" align="center" color="#00dcff" width="3.2"></a-text>
+      <a-text id="lblG" value="G = -" position="0 1.35 0" align="center" color="#00dcff" width="3.2"></a-text>
       <a-text id="lblV" value="Vm = -" position="0 1.18 0" align="center" color="#a0ff60" width="3.2"></a-text>
     </a-marker>
   </a-scene>
 
-  <!-- Pantalla de inicio — tapa la camara hasta que el usuario toque -->
   <div id="startScreen">
     <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
     <h1>Simulador AR<br>Centrifugacion</h1>
@@ -166,7 +167,7 @@
       <div class="rc"><div class="rl">Factor G</div>  <div class="rv g" id="rG">-</div></div>
       <div class="rc"><div class="rl">Fuerza Fc</div> <div class="rv o" id="rFc">-</div></div>
       <div class="rc"><div class="rl">V. Migrac.</div><div class="rv g" id="rVm">-</div></div>
-      <div class="rc"><div class="rl">ac m/s2</div>   <div class="rv"   id="rAc">-</div></div>
+      <div class="rc"><div class="rl">ac m/s2</div>   <div class="rv"  id="rAc">-</div></div>
       <div class="rc"><div class="rl">Zona Sep.</div> <div class="rv w" id="rZona">-</div></div>
     </div>
     <div class="hf">
@@ -178,6 +179,8 @@
   <script>
     var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0,clock=0;
     var speeds=[],yOff=[];
+    var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 }; // Caché física global compartida
+
     for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
     var particles=[];
     for(var i=0;i<20;i++){particles.push({id:'p'+i,angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10,el:null});}
@@ -187,15 +190,21 @@
     function cV(dp,dr,w,r,mu){return dp*dp*dr*w*w*r/(18*mu);}
     function cF(dp,dr,w,r){return(1000+dr)*(4/3)*Math.PI*Math.pow(dp/2,3)*w*w*r;}
     function zG(G){return G<1?'Sin sep.':G<300?'Baja':G<3000?'Media':G<8000?'Alta':'Ultra';}
+    
     function fV(v){var a=Math.abs(v);if(a>=1)return v.toFixed(3)+' m/s';if(a>=1e-3)return(v*1e3).toFixed(3)+' mm/s';if(a>=1e-6)return(v*1e6).toFixed(3)+' um/s';return v.toExponential(2)+' m/s';}
     function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
     function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
 
+    // Calcula y renderiza datos de interfaz de forma reactiva (solo cuando cambian los inputs)
     function compute(){
-      var rpm=+document.getElementById('sRPM').value,r=+document.getElementById('sR').value,
-          dr=+document.getElementById('sDelta').value,dp=+document.getElementById('sDp').value*1e-6,
-          mu=+document.getElementById('sMu').value*1e-3,
-          w=cO(rpm),G=cG(w,r),ac=w*w*r,Vm=cV(dp,dr,w,r,mu),Fc=cF(dp,dr,w,r);
+      var rpm=+document.getElementById('sRPM').value;
+      var r=+document.getElementById('sR').value;
+      var dr=+document.getElementById('sDelta').value;
+      var _dp=+document.getElementById('sDp').value*1e-6; // Evita mutar el valor original directamente
+      var _mu=+document.getElementById('sMu').value*1e-3;
+      
+      var w=cO(rpm), G=cG(w,r), ac=w*w*r, Vm=cV(_dp,dr,w,r,_mu), Fc=cF(_dp,dr,w,r);
+      
       document.getElementById('rOmega').textContent=w.toFixed(1)+' rad/s';
       document.getElementById('rG').textContent=G.toFixed(1)+' G';
       document.getElementById('rAc').textContent=ac.toFixed(1)+' m/s2';
@@ -203,23 +212,42 @@
       document.getElementById('rFc').textContent=fF(Fc);
       document.getElementById('rZona').textContent=zG(G);
       document.getElementById('rG').className='rv '+(G<300?'':G<3000?'g':G<8000?'o':'w');
-      document.getElementById('lblG').setAttribute('value','G = '+G.toFixed(0));
-      document.getElementById('lblV').setAttribute('value','Vm = '+fV(Vm));
-      return{w:w,r:r,dr:dr,dp:dp,mu:mu};
+      
+      var lblG = document.getElementById('lblG');
+      var lblV = document.getElementById('lblV');
+      if(lblG) lblG.setAttribute('value','G = '+G.toFixed(0));
+      if(lblV) lblV.setAttribute('value','Vm = '+fV(Vm));
+      
+      // Actualizamos la caché física para el bucle de renderizado tick()
+      currentPhysics = {w: w, r: r, dr: dr, dp: _dp, mu: _mu, Vm: Vm};
     }
 
+    // Vinculación de Eventos UI
     ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
     document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
     document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
     document.getElementById('sDelta').oninput=function(){tr(this);document.getElementById('vDelta').textContent=this.value+' kg/m3';compute();};
     document.getElementById('sDp').oninput=function(){tr(this);document.getElementById('vDp').textContent=this.value+' um';compute();};
     document.getElementById('sMu').oninput=function(){tr(this);document.getElementById('vMu').textContent=(+this.value).toFixed(1)+' mPas';compute();};
-    document.getElementById('bp').onclick=function(){paused=!paused;this.classList.toggle('paused',paused);this.textContent=paused?'Reanudar':'Pausa';if(!paused){lastT=null;requestAnimationFrame(tick);}};
-    document.getElementById('br').onclick=function(){for(var i=0;i<particles.length;i++){particles[i].rad=particles[i].heavy?0.05+Math.random()*0.1:0.40+Math.random()*0.1;}sysAngle=0;};
+    
+    document.getElementById('bp').onclick=function(){
+      paused=!paused;
+      this.classList.toggle('paused',paused);
+      this.textContent=paused?'Reanudar':'Pausa';
+      if(!paused){lastT=null;requestAnimationFrame(tick);}
+    };
+    
+    document.getElementById('br').onclick=function(){
+      for(var i=0;i<particles.length;i++){
+        particles[i].rad=particles[i].heavy?0.05+Math.random()*0.1:0.40+Math.random()*0.1;
+      }
+      sysAngle=0;
+    };
 
     var statusEl=document.getElementById('status');
     var hintEl=document.getElementById('hint');
 
+    // Controladores del Marcador Hiro
     document.getElementById('hiroMarker').addEventListener('markerFound',function(){
       hintEl.style.display='none';
       statusEl.textContent='Marcador detectado';
@@ -233,50 +261,63 @@
       statusEl.style.borderColor='rgba(0,220,255,.12)';
     });
 
-    /* AR.js ya esta corriendo — cuando el usuario toca Iniciar
-       solo quitamos la pantalla de inicio y mostramos el HUD */
     function iniciar(){
       document.getElementById('startScreen').style.display='none';
       document.getElementById('hud').style.display='flex';
       statusEl.style.display='block';
       hintEl.style.display='block';
       statusEl.textContent='Apunta al marcador Hiro';
-
-      /* Forzar video a pantalla completa */
-      setTimeout(function(){
-        document.querySelectorAll('video').forEach(function(v){
-          v.style.cssText='position:fixed!important;top:0!important;left:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;';
-        });
-      },500);
     }
 
-    document.querySelector('a-scene').addEventListener('loaded',function(){
-      /* Popup de permiso ya fue disparado por AR.js al cargar la pagina */
-      for(var i=0;i<particles.length;i++){particles[i].el=document.getElementById(particles[i].id);}
+    // Ciclo Seguro de Carga para componentes de A-Frame
+    var scene = document.querySelector('a-scene');
+    if (scene.hasLoaded) {
+      initSimulation();
+    } else {
+      scene.addEventListener('loaded', initSimulation);
+    }
+
+    function initSimulation() {
+      for(var i=0;i<particles.length;i++){
+        particles[i].el=document.getElementById(particles[i].id);
+      }
       compute();
       requestAnimationFrame(tick);
-    });
+    }
 
+    // Ciclo de Animación Principal (Optimizado a 60 FPS sin llamadas redundantes al DOM)
     function tick(ts){
-      if(paused)return;
-      if(!lastT)lastT=ts;
-      var dt=Math.min((ts-lastT)/1000,.05);lastT=ts;
+      if(paused) return;
+      if(!lastT) lastT=ts;
+      var dt=Math.min((ts-lastT)/1000,.05); lastT=ts;
       clock+=dt;
-      var v=compute(),rm=(v.r/0.6)*RMAX;
+      
+      var v = currentPhysics; // Lee los datos físicos calculados reactivamente
+      var rm=(v.r/0.6)*RMAX;
       sysAngle+=v.w*dt*0.3;
+      
       var t=document.getElementById('tambor');
-      if(t)t.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
+      if(t) t.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
+      
       for(var i=0;i<particles.length;i++){
-        var p=particles[i],rr=p.rad*v.r;
-        var nr=p.rad+(p.heavy?1:-1)*(cV(v.dp,v.dr,v.w,rr,v.mu)/v.r)*dt*speeds[i];
-        if(nr>.96)nr=.96;if(nr<.02)nr=.02;
-        p.rad=nr;p.angle+=v.w*dt*(0.28+0.035*i)*speeds[i];
+        var p=particles[i];
+        var rr=p.rad*v.r;
+        
+        // Simulación cinemática del desplazamiento radial
+        var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
+        if(nr>.96) nr=.96; if(nr<.02) nr=.02;
+        p.rad=nr;
+        
+        p.angle+=v.w*dt*(0.28+0.035*i)*speeds[i];
         var rv=p.rad*rm;
-        if(p.el)p.el.setAttribute('position',{
-          x:rv*Math.cos(p.angle+sysAngle*0.04),
-          y:0.52+yOff[i]+Math.sin(clock*1.5+i*0.7)*0.035,
-          z:rv*Math.sin(p.angle+sysAngle*0.04)
-        });
+        
+        if(p.el) {
+          p.el.setAttribute('position',{
+            x: rv*Math.cos(p.angle+sysAngle*0.04),
+            y: 0.52+yOff[i]+Math.sin(clock*1.5+i*0.7)*0.035,
+            z: rv*Math.sin(p.angle+sysAngle*0.04)
+          });
+        }
       }
       requestAnimationFrame(tick);
     }
