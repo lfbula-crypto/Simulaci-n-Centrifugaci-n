@@ -5,17 +5,16 @@
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
   <title>Simulador AR — Centrifugacion MF-II</title>
   
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/3.3.2/aframe/build/aframe-ar.js"></script>
   
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
     html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; }
 
-    /* Forzar que el lienzo 3D de A-Frame y el video convivan correctamente */
+    /* Forzar capas correctas: canvas 3D sobre el video nativo */
     .a-canvas { z-index: 1 !important; }
     
-    /* Estilo robusto para el video inyectado por AR.js */
     video {
       position: fixed !important;
       top: 0 !important;
@@ -100,9 +99,9 @@
 
   <a-scene
     embedded
-    arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth:1280; displayHeight:960; facingMode: environment; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    arjs="sourceType: webcam; videoFramerate: 30; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     vr-mode-ui="enabled: false"
-    renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true; precision: medium;"
+    renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true;"
     loading-screen="enabled: false"
   >
     <a-entity camera></a-entity>
@@ -270,7 +269,7 @@
       statusEl.style.borderColor='rgba(0,220,255,.12)';
     });
 
-    // Evento unificado para iOS/Android al presionar Iniciar
+    // ACTIVACIÓN EXPLICITA DE VIDEO MEDIANTE USER INTERACTION (Garantiza permisos en Chrome Mobile)
     function iniciar(){
       document.getElementById('startScreen').style.display='none';
       document.getElementById('hud').style.display='flex';
@@ -278,8 +277,14 @@
       hintEl.style.display='block';
       statusEl.textContent='Apunta al marcador Hiro';
 
-      // Dispara un resize global para que AR.js recalcule el tamaño del stream de la cámara trasera
-      window.dispatchEvent(new Event('resize'));
+      // Forzar al navegador a renderizar y redimensionar el video inyectado de AR.js
+      setTimeout(function() {
+        window.dispatchEvent(new Event('resize'));
+        var videos = document.querySelectorAll('video');
+        videos.forEach(function(v) {
+          v.play().catch(function(err){ console.log("Video autoplay bloqueado:", err); });
+        });
+      }, 300);
     }
 
     var scene = document.querySelector('a-scene');
