@@ -2,19 +2,31 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
   <title>Simulador AR — Centrifugacion MF-II</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.0/aframe.min.js"></script>
+  
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  
   <style>
     *{margin:0;padding:0;box-sizing:border-box;}
-    body{overflow:hidden;font-family:'Courier New',monospace; background-color: #000;}
+    html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; }
 
-    /* Fuerza que el video de AR.js ocupe toda la pantalla sin romper el layout */
+    /* Forzar que el lienzo 3D de A-Frame y el video convivan correctamente */
     .a-canvas { z-index: 1 !important; }
-    video { position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: cover !important; z-index: 0 !important; }
+    
+    /* Estilo robusto para el video inyectado por AR.js */
+    video {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      z-index: 0 !important;
+    }
 
-    /* ── Pantalla de inicio encima de todo ── */
+    /* ── Pantalla de inicio ── */
     #startScreen{
       position:fixed;inset:0;z-index:99999;
       background:linear-gradient(160deg,#000 0%,#020d1a 60%,#000 100%);
@@ -87,10 +99,11 @@
 <body>
 
   <a-scene
-    arjs="sourceType:webcam; facingMode:environment; debugUIEnabled:false; detectionMode:mono_and_matrix; matrixCodeType:3x3; trackingMethod:best;"
-    vr-mode-ui="enabled:false"
-    renderer="antialias:true; alpha:true; logarithmicDepthBuffer:true;"
-    loading-screen="enabled:false"
+    embedded
+    arjs="sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth:1280; displayHeight:960; facingMode: environment; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    vr-mode-ui="enabled: false"
+    renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true; precision: medium;"
+    loading-screen="enabled: false"
   >
     <a-entity camera></a-entity>
 
@@ -179,7 +192,7 @@
   <script>
     var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0,clock=0;
     var speeds=[],yOff=[];
-    var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 }; // Caché física global compartida
+    var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 };
 
     for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
     var particles=[];
@@ -195,12 +208,11 @@
     function fF(f){var a=Math.abs(f);if(a<1e-9)return f.toExponential(2)+' N';if(a<1e-6)return(f*1e9).toFixed(2)+' nN';if(a<1e-3)return(f*1e6).toFixed(2)+' uN';if(a<1)return(f*1e3).toFixed(3)+' mN';return f.toFixed(4)+' N';}
     function tr(e){e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100);}
 
-    // Calcula y renderiza datos de interfaz de forma reactiva (solo cuando cambian los inputs)
     function compute(){
       var rpm=+document.getElementById('sRPM').value;
       var r=+document.getElementById('sR').value;
       var dr=+document.getElementById('sDelta').value;
-      var _dp=+document.getElementById('sDp').value*1e-6; // Evita mutar el valor original directamente
+      var _dp=+document.getElementById('sDp').value*1e-6;
       var _mu=+document.getElementById('sMu').value*1e-3;
       
       var w=cO(rpm), G=cG(w,r), ac=w*w*r, Vm=cV(_dp,dr,w,r,_mu), Fc=cF(_dp,dr,w,r);
@@ -218,11 +230,9 @@
       if(lblG) lblG.setAttribute('value','G = '+G.toFixed(0));
       if(lblV) lblV.setAttribute('value','Vm = '+fV(Vm));
       
-      // Actualizamos la caché física para el bucle de renderizado tick()
       currentPhysics = {w: w, r: r, dr: dr, dp: _dp, mu: _mu, Vm: Vm};
     }
 
-    // Vinculación de Eventos UI
     ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
     document.getElementById('sRPM').oninput=function(){tr(this);document.getElementById('vRPM').textContent=this.value+' rpm';compute();};
     document.getElementById('sR').oninput=function(){tr(this);document.getElementById('vR').textContent=(+this.value).toFixed(2)+' m';compute();};
@@ -247,7 +257,6 @@
     var statusEl=document.getElementById('status');
     var hintEl=document.getElementById('hint');
 
-    // Controladores del Marcador Hiro
     document.getElementById('hiroMarker').addEventListener('markerFound',function(){
       hintEl.style.display='none';
       statusEl.textContent='Marcador detectado';
@@ -261,15 +270,18 @@
       statusEl.style.borderColor='rgba(0,220,255,.12)';
     });
 
+    // Evento unificado para iOS/Android al presionar Iniciar
     function iniciar(){
       document.getElementById('startScreen').style.display='none';
       document.getElementById('hud').style.display='flex';
       statusEl.style.display='block';
       hintEl.style.display='block';
       statusEl.textContent='Apunta al marcador Hiro';
+
+      // Dispara un resize global para que AR.js recalcule el tamaño del stream de la cámara trasera
+      window.dispatchEvent(new Event('resize'));
     }
 
-    // Ciclo Seguro de Carga para componentes de A-Frame
     var scene = document.querySelector('a-scene');
     if (scene.hasLoaded) {
       initSimulation();
@@ -285,14 +297,13 @@
       requestAnimationFrame(tick);
     }
 
-    // Ciclo de Animación Principal (Optimizado a 60 FPS sin llamadas redundantes al DOM)
     function tick(ts){
       if(paused) return;
       if(!lastT) lastT=ts;
       var dt=Math.min((ts-lastT)/1000,.05); lastT=ts;
       clock+=dt;
       
-      var v = currentPhysics; // Lee los datos físicos calculados reactivamente
+      var v = currentPhysics;
       var rm=(v.r/0.6)*RMAX;
       sysAngle+=v.w*dt*0.3;
       
@@ -303,7 +314,6 @@
         var p=particles[i];
         var rr=p.rad*v.r;
         
-        // Simulación cinemática del desplazamiento radial
         var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
         if(nr>.96) nr=.96; if(nr<.02) nr=.02;
         p.rad=nr;
