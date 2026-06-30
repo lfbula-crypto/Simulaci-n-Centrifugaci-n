@@ -12,10 +12,10 @@
     *{margin:0;padding:0;box-sizing:border-box;}
     html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; }
 
-    /* CRÍTICO: El lienzo 3D no debe bloquear los toques de los controles inferiores */
+    /* El lienzo 3D no debe bloquear los toques de los controles inferiores */
     .a-canvas { 
       z-index: 1 !important; 
-      pointer-events: none !important; /* Deja pasar los clicks al fondo si es necesario */
+      pointer-events: none !important;
     }
     
     video {
@@ -74,8 +74,8 @@
     :root{--a:#00dcff;--a2:#ff6b35;--a3:#a0ff60;--w:#ffcc00;--d:#2a4a62;--p:rgba(2,6,16,.95);--b:rgba(0,220,255,.12);--r:12px;}
     #hud{
       position:fixed;bottom:0;left:0;right:0;
-      z-index:99999 !important; /* Por encima de cualquier capa de AR.js */
-      pointer-events: auto !important; /* OBLIGA al navegador a recibir los toques táctiles */
+      z-index:99999 !important;
+      pointer-events: auto !important;
       padding:10px 14px 18px;background:var(--p);border-top:1px solid var(--b);
       backdrop-filter:blur(24px);display:none;flex-direction:column;gap:6px;
     }
@@ -87,7 +87,7 @@
     .sv{font-size:.66rem;color:var(--a);min-width:64px;text-align:right;}
     
     input[type=range]{
-      -webkit-appearance:none;flex:1;height:12px; /* Un poco más grueso para facilitar el touch en móvil */
+      -webkit-appearance:none;flex:1;height:12px;
       outline:none;cursor:pointer;border-radius:4px;
       background:linear-gradient(to right,var(--a) 0%,var(--a) calc(var(--p,50%)*1%),rgba(255,255,255,.08) calc(var(--p,50%)*1%),rgba(255,255,255,.08) 100%);
     }
@@ -130,51 +130,31 @@
     <a-entity camera></a-entity>
 
     <a-marker preset="hiro" id="hiroMarker">
-      <a-cylinder position="0 0.02 0" radius="0.68" height="0.04" color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
-      <a-cylinder id="tambor" position="0 0.52 0" radius="0.62" height="1.0" color="#0a2a3a" opacity="0.5" side="double" segments-radial="64" material="metalness:0.8;roughness:0.2;emissive:#001520;"></a-cylinder>
+      <a-cylinder position="0 0.02 0" radius="0.85" height="0.04" color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
+      <a-cylinder id="tambor" position="0 0.67 0" radius="0.80" height="1.3" color="#0a2a3a" opacity="0.45" side="double" segments-radial="64" material="metalness:0.8;roughness:0.2;emissive:#001520;"></a-cylinder>
 
-      <a-cylinder position="0.62 0.52 0"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
-      <a-cylinder position="-0.62 0.52 0"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
-      <a-cylinder position="0 0.52 0.62"      radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
-      <a-cylinder position="0 0.52 -0.62"     radius="0.008" height="1.0" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0.80 0.67 0"      radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="-0.80 0.67 0"     radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0 0.67 0.80"      radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0 0.67 -0.80"     radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
 
-      <a-torus position="0 1.02 0" radius="0.64" radius-tubular="0.026" color="#88ccdd" segments-tubular="64"></a-torus>
-      <a-torus position="0 0.02 0" radius="0.64" radius-tubular="0.026" color="#88ccdd" segments-tubular="64"></a-torus>
-      <a-cylinder position="0 0.52 0" radius="0.028" height="1.15" color="#aaccdd"></a-cylinder>
+      <a-torus position="0 1.32 0" radius="0.81" radius-tubular="0.028" color="#88ccdd" segments-tubular="64"></a-torus>
+      <a-torus position="0 0.02 0" radius="0.81" radius-tubular="0.028" color="#88ccdd" segments-tubular="64"></a-torus>
+      <a-cylinder position="0 0.67 0" radius="0.032" height="1.45" color="#aaccdd"></a-cylinder>
 
-      <a-sphere id="p0"  radius="0.062" color="#ff5500"></a-sphere>
-      <a-sphere id="p1"  radius="0.062" color="#ff5500"></a-sphere>
-      <a-sphere id="p2"  radius="0.062" color="#ff6b35"></a-sphere>
-      <a-sphere id="p3"  radius="0.062" color="#ff6b35"></a-sphere>
-      <a-sphere id="p4"  radius="0.055" color="#ff4400"></a-sphere>
-      <a-sphere id="p5"  radius="0.055" color="#ff5500"></a-sphere>
-      <a-sphere id="p6"  radius="0.058" color="#ff6b35"></a-sphere>
-      <a-sphere id="p7"  radius="0.058" color="#ff4400"></a-sphere>
-      <a-sphere id="p8"  radius="0.052" color="#ff5500"></a-sphere>
-      <a-sphere id="p9"  radius="0.052" color="#ff6b35"></a-sphere>
+      <a-entity id="particleContainer"></a-entity>
 
-      <a-sphere id="p10" radius="0.048" color="#00ffcc"></a-sphere>
-      <a-sphere id="p11" radius="0.048" color="#00ffcc"></a-sphere>
-      <a-sphere id="p12" radius="0.044" color="#00eebb"></a-sphere>
-      <a-sphere id="p13" radius="0.044" color="#00ffcc"></a-sphere>
-      <a-sphere id="p14" radius="0.050" color="#00ddaa"></a-sphere>
-      <a-sphere id="p15" radius="0.050" color="#00ffcc"></a-sphere>
-      <a-sphere id="p16" radius="0.046" color="#00eebb"></a-sphere>
-      <a-sphere id="p17" radius="0.046" color="#00ddaa"></a-sphere>
-      <a-sphere id="p18" radius="0.042" color="#00ffcc"></a-sphere>
-      <a-sphere id="p19" radius="0.042" color="#00eebb"></a-sphere>
-
-      <a-text id="lblG" value="G = -" position="0 1.35 0" align="center" color="#00dcff" width="3.2"></a-text>
-      <a-text id="lblV" value="Vm = -" position="0 1.18 0" align="center" color="#a0ff60" width="3.2"></a-text>
+      <a-text id="lblG" value="G = -" position="0 1.70 0" align="center" color="#00dcff" width="3.8"></a-text>
+      <a-text id="lblV" value="Vm = -" position="0 1.50 0" align="center" color="#a0ff60" width="3.8"></a-text>
     </a-marker>
   </a-scene>
 
   <div id="startScreen">
     <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
     <h1>Simulador AR<br>Centrifugacion</h1>
-    <p class="sub">Mecanica de Fluidos II · Unidad III<br>Imprime el marcador Hiro y apunta la camara</p>
+    <p class="sub">Mecanica de Fluidos II · Unidad III<br>Proyecto Final de Carrera</p>
     <button id="btnStart" onclick="iniciar()">Iniciar</button>
-    <p class="note">Al tocar Iniciar se activara la camara trasera</p>
+    <p class="note">Apunta al marcador Hiro impreso en papel</p>
   </div>
 
   <div id="hint"><div class="ring"></div><p class="hint-txt">Apunta al marcador Hiro</p></div>
@@ -202,13 +182,27 @@
   </div>
 
   <script>
-    var G_GRAV=9.81,RMAX=0.58,paused=false,lastT=null,sysAngle=0,clock=0;
-    var speeds=[],yOff=[];
+    var G_GRAV=9.81, RMAX=0.75, paused=false, lastT=null, sysAngle=0, clock=0;
+    var NUM_PARTICLES = 40; // ¡Aumentado a 40 partículas para mayor densidad visual!
+    var speeds=[], yOff=[];
     var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 };
-
-    for(var i=0;i<20;i++){speeds.push(0.8+Math.random()*0.4);yOff.push(-0.3+Math.random()*0.6);}
     var particles=[];
-    for(var i=0;i<20;i++){particles.push({id:'p'+i,angle:(i/20)*Math.PI*2,rad:i<10?0.05+Math.random()*0.1:0.40+Math.random()*0.1,heavy:i<10,el:null});}
+
+    // Generar datos aleatorios individuales para las 40 partículas
+    for(var i=0; i<NUM_PARTICLES; i++){
+      speeds.push(0.7 + Math.random()*0.5);
+      yOff.push(-0.45 + Math.random()*0.9); // Dispersión a lo largo de la nueva altura (1.3)
+      
+      // Mitad pesadas (naranja, migran al extremo), mitad ligeras (cian, van al centro)
+      var isHeavy = i < (NUM_PARTICLES / 2);
+      particles.push({
+        id: 'p' + i,
+        angle: (i / NUM_PARTICLES) * Math.PI * 2,
+        rad: isHeavy ? 0.05 + Math.random()*0.15 : 0.55 + Math.random()*0.15,
+        heavy: isHeavy,
+        el: null
+      });
+    }
 
     function cO(n){return 2*Math.PI*n/60;}
     function cG(w,r){return w*w*r/G_GRAV;}
@@ -249,10 +243,9 @@
       currentPhysics = {w: w, r: r, dr: dr, dp: _dp, mu: _mu, Vm: Vm};
     }
 
-    // Actualizar fondo e indicadores visuales iniciales
+    // Inicializar sliders visuales
     ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
 
-    // Enlace de eventos robusto (input y change) para máxima compatibilidad táctil
     function bindSlider(id, targetId, unit) {
       var el = document.getElementById(id);
       var updateFunc = function() {
@@ -271,7 +264,7 @@
     bindSlider('sDp', 'vDp', 'um');
     bindSlider('sMu', 'vMu', 'mPas');
     
-    // Configuración corregida para el botón Pausa / Reanudar
+    // Botón Pausa / Reanudar
     document.getElementById('bp').addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -284,12 +277,12 @@
       }
     });
     
-    // Configuración para el botón Reset
+    // Botón Reset
     document.getElementById('br').addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      for(var i=0;i<particles.length;i++){
-        particles[i].rad = particles[i].heavy ? 0.05 + Math.random()*0.1 : 0.40 + Math.random()*0.1;
+      for(var i=0; i<particles.length; i++){
+        particles[i].rad = particles[i].heavy ? 0.05 + Math.random()*0.15 : 0.55 + Math.random()*0.15;
       }
       sysAngle = 0;
     });
@@ -324,11 +317,31 @@
       }, 300);
     }
 
+    // Inyección dinámica de las 40 esferas en la escena A-Frame
     var scene = document.querySelector('a-scene');
     if (scene.hasLoaded) { initSimulation(); } else { scene.addEventListener('loaded', initSimulation); }
 
     function initSimulation() {
-      for(var i=0;i<particles.length;i++){ particles[i].el=document.getElementById(particles[i].id); }
+      var container = document.getElementById('particleContainer');
+      
+      // Crear las etiquetas de las partículas en el DOM dinámicamente
+      particles.forEach(function(p) {
+        var sphere = document.createElement('a-sphere');
+        sphere.setAttribute('id', p.id);
+        
+        if(p.heavy) {
+          sphere.setAttribute('radius', (0.045 + Math.random()*0.015).toFixed(3));
+          sphere.setAttribute('color', '#ff5500'); // Fase Pesada: Naranja denso
+          sphere.setAttribute('material', 'metalness:0.4; roughness:0.3; emissive:#331100;');
+        } else {
+          sphere.setAttribute('radius', (0.035 + Math.random()*0.012).toFixed(3));
+          sphere.setAttribute('color', '#00ffcc'); // Fase Ligera: Cian / Verde aqua
+          sphere.setAttribute('material', 'metalness:0.3; roughness:0.4; emissive:#005544;');
+        }
+        container.appendChild(sphere);
+        p.el = sphere;
+      });
+
       compute();
       requestAnimationFrame(tick);
     }
@@ -346,20 +359,23 @@
       var t=document.getElementById('tambor');
       if(t) t.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
       
-      for(var i=0;i<particles.length;i++){
+      for(var i=0; i<particles.length; i++){
         var p=particles[i];
+        
+        // Ecuación de migración radial basada en la velocidad terminal Vm
         var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
         if(nr>.96) nr=.96; if(nr<.02) nr=.02;
         p.rad=nr;
         
-        p.angle+=v.w*dt*(0.28+0.035*i)*speeds[i];
+        // Simulación del arrastre tangencial rotatorio
+        p.angle+=v.w*dt*(0.25+0.025*i)*speeds[i];
         var rv=p.rad*rm;
         
         if(p.el) {
           p.el.setAttribute('position',{
-            x: rv*Math.cos(p.angle+sysAngle*0.04),
-            y: 0.52+yOff[i]+Math.sin(clock*1.5+i*0.7)*0.035,
-            z: rv*Math.sin(p.angle+sysAngle*0.04)
+            x: rv*Math.cos(p.angle+sysAngle*0.03),
+            y: 0.67+yOff[i]+Math.sin(clock*1.8+i*0.5)*0.04, // Movimiento armónico sutil vertical
+            z: rv*Math.sin(p.angle+sysAngle*0.03)
           });
         }
       }
