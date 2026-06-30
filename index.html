@@ -16,6 +16,7 @@
       position: relative;
     }
     
+    /* Forzado estricto de pantalla completa para evitar franjas laterales */
     .a-canvas { 
       z-index: 1 !important; 
       pointer-events: none !important;
@@ -132,23 +133,22 @@
     renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true; colorManagement: true;"
     loading-screen="enabled: false"
   >
-    <a-entity id="lightAmbient" lighting atmosphere_light entity-light camera-light light="type: ambient; color: #ffffff; intensity: 1.1;"></a-entity>
-    <a-entity id="lightDirectional" light="type: directional; color: #00dcff; intensity: 0.6; castShadow: false;" position="1 4 2"></a-entity>
+    <a-entity id="lightAmbient" light="type: ambient; color: #ffffff; intensity: 1.2;"></a-entity>
+    <a-entity id="lightDirectional" light="type: directional; color: #00dcff; intensity: 0.6;" position="1 4 2"></a-entity>
     
     <a-entity camera></a-entity>
 
     <a-marker preset="hiro" id="hiroMarker">
-      <a-cylinder position="0 0.02 0" radius="0.85" height="0.04" color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
-      <a-cylinder id="tambor" position="0 0.67 0" radius="0.80" height="1.3" color="#0d3a52" opacity="0.28" side="double" segments-radial="64" material="metalness:0.5; roughness:0.3; emissive:#011220;"></a-cylinder>
+      <a-cylinder position="0 0.01 0" radius="0.85" height="0.02" color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
+      
+      <a-cylinder id="tambor" position="0 0.67 0" radius="0.80" height="1.3" color="#0d3a52" opacity="0.25" side="double" segments-radial="64" material="metalness:0.4; roughness:0.3; emissive:#011220;"></a-cylinder>
 
-      <a-cylinder position="0.80 0.67 0"      radius="0.009" height="1.3" color="#00dcff" opacity="0.6"></a-cylinder>
-      <a-cylinder position="-0.80 0.67 0"     radius="0.009" height="1.3" color="#00dcff" opacity="0.6"></a-cylinder>
-      <a-cylinder position="0 0.67 0.80"      radius="0.009" height="1.3" color="#00dcff" opacity="0.6"></a-cylinder>
-      <a-cylinder position="0 0.67 -0.80"     radius="0.009" height="1.3" color="#00dcff" opacity="0.6"></a-cylinder>
+      <a-cylinder position="0.80 0.67 0"      radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="-0.80 0.67 0"     radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0 0.67 0.80"      radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0 0.67 -0.80"     radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
 
-      <a-torus position="0 1.32 0" radius="0.81" radius-tubular="0.028" color="#aaccdd" segments-tubular="64" material="metalness:0.9; roughness:0.1;"></a-torus>
-      <a-torus position="0 0.02 0" radius="0.81" radius-tubular="0.028" color="#aaccdd" segments-tubular="64" material="metalness:0.9; roughness:0.1;"></a-torus>
-      <a-cylinder position="0 0.67 0" radius="0.035" height="1.45" color="#ffffff" material="metalness:0.95; roughness:0.05;"></a-cylinder>
+      <a-cylinder position="0 0.67 0" radius="0.035" height="1.40" color="#ffffff" material="metalness:0.95; roughness:0.05;"></a-cylinder>
 
       <a-entity id="particleContainer"></a-entity>
 
@@ -307,7 +307,13 @@
       statusEl.textContent='Apunta al marcador Hiro';
 
       setTimeout(function() {
+        // Redimensionamiento estricto invocando los métodos internos de la escena AR
+        var sceneEl = document.querySelector('a-scene');
+        if (sceneEl && sceneEl.toolkit) {
+          sceneEl.toolkit.onResize();
+        }
         window.dispatchEvent(new Event('resize'));
+        
         var videos = document.querySelectorAll('video');
         videos.forEach(function(v) {
           v.style.width = "100vw";
