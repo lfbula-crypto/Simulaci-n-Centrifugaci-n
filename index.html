@@ -12,7 +12,6 @@
     *{margin:0;padding:0;box-sizing:border-box;}
     html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; }
 
-    /* ELIMINA LAS FRANJAS NEGRAS: Fuerza a la cámara a ocupar TODA la pantalla del móvil */
     body {
       position: relative;
     }
@@ -30,7 +29,7 @@
       left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      object-fit: cover !important; /* Recorta y expande el flujo de la cámara sin deformar */
+      object-fit: cover !important;
       z-index: 0 !important;
     }
 
@@ -171,7 +170,7 @@
 
   <div id="hud">
     <div class="hh"><span class="ht">Centrifugacion — AR</span><span class="hb">Unidad III · MF-II</span></div>
-    <div class="sr"><span class="sl">RPM</span><input type="range" id="sRPM" min="0" max="5000" value="1200" step="50"><span class="sv" id="vRPM">1200 rpm</span></div>
+    <div class="sr"><span class="sl">RPM</span><input type="range" id="sRPM" min="0" max="1000" value="400" step="10"><span class="sv" id="vRPM">400 rpm</span></div>
     <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.05" max="0.60" value="0.30" step="0.01"><span class="sv" id="vR">0.30 m</span></div>
     <div class="sr"><span class="sl">Densidad kg/m3</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
     <div class="sr"><span class="sl">d_p (um)</span><input type="range" id="sDp" min="1" max="200" value="50" step="1"><span class="sv" id="vDp">50 um</span></div>
@@ -308,7 +307,6 @@
       statusEl.textContent='Apunta al marcador Hiro';
 
       setTimeout(function() {
-        // Corrección de redimensionamiento forzado de AR.js para pantalla completa táctil
         window.dispatchEvent(new Event('resize'));
         var videos = document.querySelectorAll('video');
         videos.forEach(function(v) {
@@ -332,10 +330,9 @@
         
         if(p.heavy) {
           sphere.setAttribute('radius', (0.048 + Math.random()*0.012).toFixed(3));
-          sphere.setAttribute('color', '#ff5100'); // Fase pesada
+          sphere.setAttribute('color', '#ff5100'); 
           sphere.setAttribute('material', 'metalness:0.3; roughness:0.2; emissive:#441100;');
         } else {
-          // Fase ligera optimizada con brillo emissive cian fosforescente para resaltar en el eje central
           sphere.setAttribute('radius', (0.040 + Math.random()*0.010).toFixed(3));
           sphere.setAttribute('color', '#00ffff'); 
           sphere.setAttribute('material', 'metalness:0.2; roughness:0.1; emissive:#006666; emissiveIntensity:1.5;');
