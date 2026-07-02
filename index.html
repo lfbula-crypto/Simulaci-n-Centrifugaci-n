@@ -16,7 +16,6 @@
       position: relative;
     }
     
-    /* Forzado estricto de pantalla completa para evitar franjas laterales */
     .a-canvas { 
       z-index: 1 !important; 
       pointer-events: none !important;
@@ -119,8 +118,8 @@
       cursor:pointer;background:transparent;
       pointer-events: auto !important;
     }
-    #bp{border:1px solid var(--a2);color:var(--a2);}
-    #bp.paused{border-color:var(--a);color:var(--a);background: rgba(0,220,255,0.1);}
+    #bp{border:1px solid var(--a2);color:var(--a2);background: rgba(255, 107, 53, 0.05);}
+    #bp.paused{border-color:var(--a3);color:var(--a3);background: rgba(160,255,96,0.15);}
     #br{border:1px solid var(--d);color:var(--d);}
   </style>
 </head>
@@ -133,22 +132,28 @@
     renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true; colorManagement: true;"
     loading-screen="enabled: false"
   >
-    <a-entity id="lightAmbient" light="type: ambient; color: #ffffff; intensity: 1.2;"></a-entity>
-    <a-entity id="lightDirectional" light="type: directional; color: #00dcff; intensity: 0.6;" position="1 4 2"></a-entity>
+    <a-entity id="lightAmbient" light="type: ambient; color: #ffffff; intensity: 1.4;"></a-entity>
+    <a-entity id="lightDirectional" light="type: directional; color: #ffffff; intensity: 0.8; castShadow: false;" position="1 4 2"></a-entity>
     
     <a-entity camera></a-entity>
 
     <a-marker preset="hiro" id="hiroMarker">
-      <a-cylinder position="0 0.01 0" radius="0.85" height="0.02" color="#051520" opacity="0.9" segments-radial="48"></a-cylinder>
+      <a-cylinder position="0 0.01 0" radius="0.85" height="0.02" color="#030b14" opacity="0.95" segments-radial="48"></a-cylinder>
       
-      <a-cylinder id="tambor" position="0 0.67 0" radius="0.80" height="1.3" color="#0d3a52" opacity="0.25" side="double" segments-radial="64" material="metalness:0.4; roughness:0.3; emissive:#011220;"></a-cylinder>
+      <a-cylinder id="tambor" position="0 0.67 0" radius="0.80" height="1.3" 
+                  color="#103e59" opacity="0.18" side="double" segments-radial="64" 
+                  material="metalness: 0.2; roughness: 0.1; emmissive: #011220; strokeColor: #00dcff; strokeWidth: 2;">
+      </a-cylinder>
 
-      <a-cylinder position="0.80 0.67 0"      radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
-      <a-cylinder position="-0.80 0.67 0"     radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
-      <a-cylinder position="0 0.67 0.80"      radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
-      <a-cylinder position="0 0.67 -0.80"     radius="0.009" height="1.3" color="#00dcff" opacity="0.5"></a-cylinder>
+      <a-cylinder position="0 1.32 0" radius="0.80" height="0.005" color="#00dcff" opacity="0.4" side="double" segments-radial="64"></a-cylinder>
+      <a-cylinder position="0 0.02 0" radius="0.80" height="0.005" color="#00dcff" opacity="0.4" side="double" segments-radial="64"></a-cylinder>
 
-      <a-cylinder position="0 0.67 0" radius="0.035" height="1.40" color="#ffffff" material="metalness:0.95; roughness:0.05;"></a-cylinder>
+      <a-cylinder position="0.80 0.67 0"      radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
+      <a-cylinder position="-0.80 0.67 0"     radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
+      <a-cylinder position="0 0.67 0.80"      radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
+      <a-cylinder position="0 0.67 -0.80"     radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
+
+      <a-cylinder position="0 0.67 0" radius="0.022" height="1.35" color="#e0f7ff" material="metalness:0.9; roughness:0.1;"></a-cylinder>
 
       <a-entity id="particleContainer"></a-entity>
 
@@ -170,11 +175,12 @@
 
   <div id="hud">
     <div class="hh"><span class="ht">Centrifugacion — AR</span><span class="hb">Unidad III · MF-II</span></div>
-    <div class="sr"><span class="sl">RPM</span><input type="range" id="sRPM" min="0" max="1000" value="400" step="10"><span class="sv" id="vRPM">400 rpm</span></div>
+    <div class="sr"><span class="sl">RPM (w)</span><input type="range" id="sRPM" min="0" max="1000" value="400" step="10"><span class="sv" id="vRPM">400 rpm</span></div>
     <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.05" max="0.60" value="0.30" step="0.01"><span class="sv" id="vR">0.30 m</span></div>
-    <div class="sr"><span class="sl">Densidad kg/m3</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
+    <div class="sr"><span class="sl">Δρ (kg/m3)</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
     <div class="sr"><span class="sl">d_p (um)</span><input type="range" id="sDp" min="1" max="200" value="50" step="1"><span class="sv" id="vDp">50 um</span></div>
-    <div class="sr"><span class="sl">viscosidad mPas</span><input type="range" id="sMu" min="0.5" max="100" value="1.0" step="0.5"><span class="sv" id="vMu">1.0 mPas</span></div>
+    <div class="sr"><span class="sl">Viscosidad μ</span><input type="range" id="sMu" min="0.5" max="100" value="1.0" step="0.5"><span class="sv" id="vMu">1.0 mPas</span></div>
+    
     <div class="rg">
       <div class="rc"><div class="rl">omega rad/s</div><div class="rv"  id="rOmega">-</div></div>
       <div class="rc"><div class="rl">Factor G</div>  <div class="rv g" id="rG">-</div></div>
@@ -191,20 +197,21 @@
 
   <script>
     var G_GRAV=9.81, RMAX=0.75, paused=false, lastT=null, sysAngle=0, clock=0;
-    var NUM_PARTICLES = 40;
+    var NUM_PARTICLES = 45;
     var speeds=[], yOff=[];
     var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 };
     var particles=[];
 
+    // Configuración inicial de partículas con distribución balanceada y contrastada
     for(var i=0; i<NUM_PARTICLES; i++){
-      speeds.push(0.75 + Math.random()*0.5);
-      yOff.push(-0.48 + Math.random()*0.96);
+      speeds.push(0.6 + Math.random()*0.6);
+      yOff.push(-0.45 + Math.random()*0.9);
       
       var isHeavy = i < (NUM_PARTICLES / 2);
       particles.push({
         id: 'p' + i,
         angle: (i / NUM_PARTICLES) * Math.PI * 2,
-        rad: isHeavy ? 0.08 + Math.random()*0.15 : 0.50 + Math.random()*0.15,
+        rad: isHeavy ? 0.08 + Math.random()*0.12 : 0.45 + Math.random()*0.15,
         heavy: isHeavy,
         el: null
       });
@@ -269,6 +276,7 @@
     bindSlider('sDp', 'vDp', 'um');
     bindSlider('sMu', 'vMu', 'mPas');
     
+    // Control estricto de PAUSA exigido por los criterios obligatorios del proyecto
     document.getElementById('bp').addEventListener('click', function(e) {
       e.preventDefault(); e.stopPropagation();
       paused = !paused;
@@ -280,7 +288,7 @@
     document.getElementById('br').addEventListener('click', function(e) {
       e.preventDefault(); e.stopPropagation();
       for(var i=0; i<particles.length; i++){
-        particles[i].rad = particles[i].heavy ? 0.08 + Math.random()*0.15 : 0.50 + Math.random()*0.15;
+        particles[i].rad = particles[i].heavy ? 0.08 + Math.random()*0.12 : 0.45 + Math.random()*0.15;
       }
       sysAngle = 0;
     });
@@ -307,11 +315,8 @@
       statusEl.textContent='Apunta al marcador Hiro';
 
       setTimeout(function() {
-        // Redimensionamiento estricto invocando los métodos internos de la escena AR
         var sceneEl = document.querySelector('a-scene');
-        if (sceneEl && sceneEl.toolkit) {
-          sceneEl.toolkit.onResize();
-        }
+        if (sceneEl && sceneEl.toolkit) { sceneEl.toolkit.onResize(); }
         window.dispatchEvent(new Event('resize'));
         
         var videos = document.querySelectorAll('video');
@@ -334,14 +339,15 @@
         var sphere = document.createElement('a-sphere');
         sphere.setAttribute('id', p.id);
         
+        // Colores y brillos de alta gama independientes para que resalten a través del vidrio translúcido
         if(p.heavy) {
-          sphere.setAttribute('radius', (0.048 + Math.random()*0.012).toFixed(3));
-          sphere.setAttribute('color', '#ff5100'); 
-          sphere.setAttribute('material', 'metalness:0.3; roughness:0.2; emissive:#441100;');
+          sphere.setAttribute('radius', (0.046 + Math.random()*0.012).toFixed(3));
+          sphere.setAttribute('color', '#ff5500'); 
+          sphere.setAttribute('material', 'metalness:0.4; roughness:0.2; emissive:#551100; emissiveIntensity:1.2;');
         } else {
-          sphere.setAttribute('radius', (0.040 + Math.random()*0.010).toFixed(3));
+          sphere.setAttribute('radius', (0.038 + Math.random()*0.010).toFixed(3));
           sphere.setAttribute('color', '#00ffff'); 
-          sphere.setAttribute('material', 'metalness:0.2; roughness:0.1; emissive:#006666; emissiveIntensity:1.5;');
+          sphere.setAttribute('material', 'metalness:0.3; roughness:0.1; emissive:#007777; emissiveIntensity:1.8;');
         }
         container.appendChild(sphere);
         p.el = sphere;
@@ -351,8 +357,9 @@
       requestAnimationFrame(tick);
     }
 
+    // Bucle físico de renderizado continuo
     function tick(ts){
-      if(paused) return;
+      if(paused) return; // Congelación estática instantánea al activar la pausa obligatoria
       if(!lastT) lastT=ts;
       var dt=Math.min((ts-lastT)/1000,.05); lastT=ts;
       clock+=dt;
@@ -367,18 +374,19 @@
       for(var i=0; i<particles.length; i++){
         var p=particles[i];
         
+        // Desplazamiento radial estricto simulando la fuerza centrífuga de separación
         var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
         if(nr>.96) nr=.96; if(nr<.02) nr=.02;
         p.rad=nr;
         
-        p.angle+=v.w*dt*(0.25+0.025*i)*speeds[i];
+        p.angle+=v.w*dt*(0.22+0.02*i)*speeds[i];
         var rv=p.rad*rm;
         
         if(p.el) {
           p.el.setAttribute('position',{
-            x: rv*Math.cos(p.angle+sysAngle*0.03),
-            y: 0.67+yOff[i]+Math.sin(clock*1.8+i*0.5)*0.04,
-            z: rv*Math.sin(p.angle+sysAngle*0.03)
+            x: rv*Math.cos(p.angle+sysAngle*0.02),
+            y: 0.67+yOff[i]+Math.sin(clock*1.6+i*0.4)*0.03, // Suave oscilación de sustentación en el fluido
+            z: rv*Math.sin(p.angle+sysAngle*0.02)
           });
         }
       }
