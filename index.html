@@ -120,7 +120,7 @@
     }
     #bp{border:1px solid var(--a2);color:var(--a2);background: rgba(255, 107, 53, 0.05);}
     #bp.paused{border-color:var(--a3);color:var(--a3);background: rgba(160,255,96,0.15);}
-    #br{border:1px solid var(--d);color:var(--d);}
+    #br{border:1px solid #00dcff;color:#00dcff;background: rgba(0,220,255,0.05);}
   </style>
 </head>
 <body>
@@ -133,7 +133,7 @@
     loading-screen="enabled: false"
   >
     <a-entity id="lightAmbient" light="type: ambient; color: #ffffff; intensity: 1.4;"></a-entity>
-    <a-entity id="lightDirectional" light="type: directional; color: #ffffff; intensity: 0.8; castShadow: false;" position="1 4 2"></a-entity>
+    <a-entity id="lightDirectional" light="type: directional; color: #ffffff; intensity: 0.8;" position="1 4 2"></a-entity>
     
     <a-entity camera></a-entity>
 
@@ -142,7 +142,7 @@
       
       <a-cylinder id="tambor" position="0 0.67 0" radius="0.80" height="1.3" 
                   color="#103e59" opacity="0.18" side="double" segments-radial="64" 
-                  material="metalness: 0.2; roughness: 0.1; emmissive: #011220; strokeColor: #00dcff; strokeWidth: 2;">
+                  material="metalness: 0.2; roughness: 0.1; emmissive: #011220;">
       </a-cylinder>
 
       <a-cylinder position="0 1.32 0" radius="0.80" height="0.005" color="#00dcff" opacity="0.4" side="double" segments-radial="64"></a-cylinder>
@@ -197,22 +197,24 @@
 
   <script>
     var G_GRAV=9.81, RMAX=0.75, paused=false, lastT=null, sysAngle=0, clock=0;
-    var NUM_PARTICLES = 45;
+    
+    // AUMENTO DE PARTÍCULAS: Incrementado a 90 para simular mayor densidad tridimensional
+    var NUM_PARTICLES = 90;
     var speeds=[], yOff=[];
     var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 };
     var particles=[];
 
-    // Configuración inicial de partículas con distribución balanceada y contrastada
     for(var i=0; i<NUM_PARTICLES; i++){
-      speeds.push(0.6 + Math.random()*0.6);
-      yOff.push(-0.45 + Math.random()*0.9);
+      speeds.push(0.5 + Math.random()*0.7);
+      yOff.push(-0.48 + Math.random()*0.96);
       
       var isHeavy = i < (NUM_PARTICLES / 2);
       particles.push({
         id: 'p' + i,
         angle: (i / NUM_PARTICLES) * Math.PI * 2,
-        rad: isHeavy ? 0.08 + Math.random()*0.12 : 0.45 + Math.random()*0.15,
+        rad: isHeavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20,
         heavy: isHeavy,
+        baseScale: isHeavy ? 1.2 : 0.9, // Factor multiplicador base por peso
         el: null
       });
     }
@@ -253,7 +255,7 @@
       if(lblG) lblG.setAttribute('value','G = '+G.toFixed(0));
       if(lblV) lblV.setAttribute('value','Vm = '+fV(Vm));
       
-      currentPhysics = {w: w, r: r, dr: dr, dp: _dp, mu: _mu, Vm: Vm};
+      currentPhysics = {w: w, r: r, dr: dr, dp: +document.getElementById('sDp').value, mu: _mu, Vm: Vm};
     }
 
     ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
@@ -276,7 +278,6 @@
     bindSlider('sDp', 'vDp', 'um');
     bindSlider('sMu', 'vMu', 'mPas');
     
-    // Control estricto de PAUSA exigido por los criterios obligatorios del proyecto
     document.getElementById('bp').addEventListener('click', function(e) {
       e.preventDefault(); e.stopPropagation();
       paused = !paused;
@@ -285,12 +286,32 @@
       if(!paused){ lastT = null; requestAnimationFrame(tick); }
     });
     
+    // ARREGLO COMPLETO DEL BOTÓN RESET: Limpieza física de simulación y reseteo estricto de sliders del DOM
     document.getElementById('br').addEventListener('click', function(e) {
       e.preventDefault(); e.stopPropagation();
+      
+      // Valores base por defecto
+      document.getElementById('sRPM').value = 400;
+      document.getElementById('sR').value = 0.30;
+      document.getElementById('sDelta').value = 600;
+      document.getElementById('sDp').value = 50;
+      document.getElementById('sMu').value = 1.0;
+
+      // Actualizar etiquetas de texto de sliders y fondos de barra
+      document.getElementById('vRPM').textContent = '400 rpm';
+      document.getElementById('vR').textContent = '0.30 m';
+      document.getElementById('vDelta').textContent = '600 kg/m3';
+      document.getElementById('vDp').textContent = '50 um';
+      document.getElementById('vMu').textContent = '1.0 mPas';
+      
+      ['sRPM','sR','sDelta','sDp','sMu'].forEach(function(id){tr(document.getElementById(id));});
+
+      // Reposicionar partículas a su estado de mezcla desordenada original
       for(var i=0; i<particles.length; i++){
-        particles[i].rad = particles[i].heavy ? 0.08 + Math.random()*0.12 : 0.45 + Math.random()*0.15;
+        particles[i].rad = particles[i].heavy ? 0.08 + Math.random()*0.14 : 0.45 + Math.random()*0.18;
       }
       sysAngle = 0;
+      compute();
     });
 
     var statusEl=document.getElementById('status');
@@ -339,13 +360,10 @@
         var sphere = document.createElement('a-sphere');
         sphere.setAttribute('id', p.id);
         
-        // Colores y brillos de alta gama independientes para que resalten a través del vidrio translúcido
         if(p.heavy) {
-          sphere.setAttribute('radius', (0.046 + Math.random()*0.012).toFixed(3));
           sphere.setAttribute('color', '#ff5500'); 
           sphere.setAttribute('material', 'metalness:0.4; roughness:0.2; emissive:#551100; emissiveIntensity:1.2;');
         } else {
-          sphere.setAttribute('radius', (0.038 + Math.random()*0.010).toFixed(3));
           sphere.setAttribute('color', '#00ffff'); 
           sphere.setAttribute('material', 'metalness:0.3; roughness:0.1; emissive:#007777; emissiveIntensity:1.8;');
         }
@@ -357,9 +375,8 @@
       requestAnimationFrame(tick);
     }
 
-    // Bucle físico de renderizado continuo
     function tick(ts){
-      if(paused) return; // Congelación estática instantánea al activar la pausa obligatoria
+      if(paused) return;
       if(!lastT) lastT=ts;
       var dt=Math.min((ts-lastT)/1000,.05); lastT=ts;
       clock+=dt;
@@ -371,10 +388,13 @@
       var t=document.getElementById('tambor');
       if(t) t.setAttribute('rotation',{x:0,y:(sysAngle*180/Math.PI)%360,z:0});
       
+      // CALIBRACIÓN TRIDIMENSIONAL: Cambio dinámico de escala y radio por d_p en tiempo real
+      // Mapea el valor de micras (1 a 200) a unidades de radio de A-Frame razonables para el tambor.
+      var dynamicRadius = 0.01 + (v.dp / 200) * 0.055;
+
       for(var i=0; i<particles.length; i++){
         var p=particles[i];
         
-        // Desplazamiento radial estricto simulando la fuerza centrífuga de separación
         var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
         if(nr>.96) nr=.96; if(nr<.02) nr=.02;
         p.rad=nr;
@@ -383,9 +403,14 @@
         var rv=p.rad*rm;
         
         if(p.el) {
+          // 1. Modificar dinámicamente el tamaño basándose en el slider d_p
+          var currentSize = (dynamicRadius * p.baseScale).toFixed(4);
+          p.el.setAttribute('radius', currentSize);
+
+          // 2. Actualizar posiciones espaciales de la partícula
           p.el.setAttribute('position',{
             x: rv*Math.cos(p.angle+sysAngle*0.02),
-            y: 0.67+yOff[i]+Math.sin(clock*1.6+i*0.4)*0.03, // Suave oscilación de sustentación en el fluido
+            y: 0.67+yOff[i]+Math.sin(clock*1.6+i*0.4)*0.03,
             z: rv*Math.sin(p.angle+sysAngle*0.02)
           });
         }
