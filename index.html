@@ -15,7 +15,6 @@
     .a-canvas { z-index: 1 !important; pointer-events: none !important; width: 100% !important; height: 100% !important; }
     video { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; object-fit: cover !important; z-index: 0 !important; }
 
-    /* Pantalla de inicio */
     #startScreen{
       position:fixed;inset:0;z-index:99999;
       background:linear-gradient(160deg,#000 0%,#020d1a 60%,#000 100%);
@@ -107,7 +106,7 @@
       <a-cylinder position="-0.80 0.67 0" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
       <a-cylinder position="0 0.67 0.80" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
       <a-cylinder position="0 0.67 -0.80" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
-      <a-cylinder position="0 0.67 0" radius="0.022" height="1.35" color="#e0f7ff" material="metalness:0.9; roughness:0.1;"></a-entity>
+      <a-cylinder position="0 0.67 0" radius="0.022" height="1.35" color="#e0f7ff" material="metalness:0.9; roughness:0.1;"></a-cylinder>
 
       <a-entity id="particleContainer"></a-entity>
     </a-marker>
@@ -126,10 +125,11 @@
 
   <div id="hud">
     <div class="hh"><span class="ht">Centrifugacion — AR</span><span class="hb">Unidad III · MF-II</span></div>
-    <div class="sr"><span class="sl">RPM (w)</span><input type="range" id="sRPM" min="0" max="1000" value="400" step="10"><span class="sv" id="vRPM">400 rpm</span></div>
-    <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.05" max="0.60" value="0.30" step="0.01"><span class="sv" id="vR">0.30 m</span></div>
+    <!-- AJUSTE SLIDERS SEGÚN TABLA image_b261c2.png -->
+    <div class="sr"><span class="sl">RPM (w)</span><input type="range" id="sRPM" min="0" max="25000" value="400" step="100"><span class="sv" id="vRPM">400 rpm</span></div>
+    <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.005" max="0.60" value="0.30" step="0.001"><span class="sv" id="vR">0.300 m</span></div>
     <div class="sr"><span class="sl">Δρ (kg/m3)</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
-    <div class="sr"><span class="sl">d_p (um)</span><input type="range" id="sDp" min="1" max="200" value="50" step="1"><span class="sv" id="vDp">50 um</span></div>
+    <div class="sr"><span class="sl">d_p (um)</span><input type="range" id="sDp" min="0.1" max="200" value="50" step="0.1"><span class="sv" id="vDp">50.0 um</span></div>
     <div class="sr"><span class="sl">Viscosidad μ</span><input type="range" id="sMu" min="0.5" max="100" value="1.0" step="0.5"><span class="sv" id="vMu">1.0 mPas</span></div>
     <div class="sr"><span class="sl">N° Partículas</span><input type="range" id="sCount" min="10" max="150" value="70" step="5"><span class="sv" id="vCount">70 part.</span></div>
     
@@ -141,7 +141,7 @@
       <div class="rc"><div class="rl">Masa Part. (m)</div><div class="rv" id="rMasa">-</div></div>
       <div class="rc"><div class="rl">V. Migrac.</div><div class="rv g" id="rVm">-</div></div>
       <div class="rc"><div class="rl">Reynolds Re</div><div class="rv o" id="rRe">-</div></div>
-      <div class="rc"><div class="rl">Reg. Flujo</div><div class="rv g" id="rRegimen">-</div></div>
+      <div class="rc"><div class="rl">Reg. Flujo</div><div class="rv w" id="rRegimen">-</div></div>
     </div>
     <div class="hf">
       <div class="fm"><span>ac</span>=r·ω² | <span>Fc</span>=m·r·ω² | <span>Vm</span>=d²Δρw²r/18μ | <span>Re</span>=d·Vm·ρ/μ</div>
@@ -180,6 +180,7 @@
             id: 'p' + i,
             angle: Math.random() * Math.PI * 2,
             rad: isHeavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20,
+            coords: isHeavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20,
             heavy: isHeavy,
             baseScale: isHeavy ? 1.2 : 0.9,
             el: null
@@ -231,7 +232,6 @@
       
       document.getElementById('rRe').textContent = Re < 1e-4 ? Re.toExponential(2) : Re.toFixed(4);
       
-      // LOGICA CORREGIDA: Todo valor <= 1 es estrictamente Laminar
       var regText = "Laminar", regClass = "rv g";
       if(Re > 1 && Re <= 1000) { 
         regText = "Transición"; 
@@ -256,7 +256,7 @@
       var el = document.getElementById(id);
       var updateFunc = function() {
         tr(this);
-        var val = (id==='sR' || id==='sMu') ? (+this.value).toFixed(2) : this.value;
+        var val = (id==='sDelta' || id==='sRPM' || id==='sCount') ? this.value : (+this.value).toFixed(id==='sR'?3:1);
         document.getElementById(targetId).textContent = val + ' ' + unit;
         
         if(id === 'sCount') {
@@ -293,15 +293,18 @@
       document.getElementById('sCount').value = 70;
 
       document.getElementById('vRPM').textContent = '400 rpm';
-      document.getElementById('vR').textContent = '0.30 m';
+      document.getElementById('vR').textContent = '0.300 m';
       document.getElementById('vDelta').textContent = '600 kg/m3';
-      document.getElementById('vDp').textContent = '50 um';
+      document.getElementById('vDp').textContent = '50.0 um';
       document.getElementById('vMu').textContent = '1.0 mPas';
       document.getElementById('vCount').textContent = '70 part.';
       
       ['sRPM','sR','sDelta','sDp','sMu','sCount'].forEach(function(id){tr(document.getElementById(id));});
 
-      syncParticleCount(70);
+      // Resetear radios lógicos a posición de mezcla
+      for(var i=0; i<particles.length; i++){
+        particles[i].rad = particles[i].heavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20;
+      }
       sysAngle = 0;
       compute();
     });
@@ -343,7 +346,12 @@
       clock+=dt;
       
       var v = currentPhysics;
-      var rm=(v.r/0.6)*RMAX;
+      
+      // SOLUCIÓN AL PROBLEMA DE image_13.png: 
+      // El radio máximo visual (rm) ahora está vinculado al radio físico (v.r)
+      // Mapeamos el radio físico (0.005 a 0.60m) a unidades visuales de A-Frame razonables (0.01 a RMAX=0.75).
+      var visualRMax = 0.01 + ((v.r - 0.005) / (0.60 - 0.005)) * (RMAX - 0.01);
+      
       sysAngle+=v.w*dt*0.3;
       
       var t=document.getElementById('tambor');
@@ -355,13 +363,15 @@
         var p=particles[i];
         if(!p) continue;
         
+        // Migración radial basada en Vm
         var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
-        if(nr>.96) nr=.96; if(nr<.02) nr=.02;
-        p.coords=nr;
+        if(nr>.96) nr=.96; if(nr<.02) nr=.02; // Límites lógicos internos
         p.rad=nr;
         
         p.angle+=v.w*dt*(0.22+0.02*i)*speeds[i];
-        var rv=p.rad*rm;
+        
+        // CORRECCIÓN FINAL: Vincular radio de simulación al radio máximo visual dinámico
+        var rv=p.rad*visualRMax;
         
         if(p.el) {
           var currentSize = (dynamicRadius * p.baseScale).toFixed(4);
