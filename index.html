@@ -106,11 +106,11 @@
       <a-cylinder position="-0.80 0.67 0" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
       <a-cylinder position="0 0.67 0.80" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
       <a-cylinder position="0 0.67 -0.80" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
-      <a-cylinder position="0 0.67 0" radius="0.022" height="1.35" color="#e0f7ff" material="metalness:0.9; roughness:0.1;"></a-cylinder>
+      <a-cylinder position="0 0.67 0" radius="0.022" height="1.35" color="#e0f7ff" material="metalness:0.9; roughness:0.1;"></a-entity>
 
       <a-entity id="particleContainer"></a-entity>
     </a-marker>
-  </a-scene>
+  </scene>
 
   <div id="startScreen">
     <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
@@ -140,7 +140,7 @@
       <div class="rc"><div class="rl">Masa Part. (m)</div><div class="rv" id="rMasa">-</div></div>
       <div class="rc"><div class="rl">V. Migrac.</div><div class="rv g" id="rVm">-</div></div>
       <div class="rc"><div class="rl">Reynolds Re</div><div class="rv o" id="rRe">-</div></div>
-      <div class="rc"><div class="rl">Reg. Flujo</div><div class="rv w" id="rRegimen">-</div></div>
+      <div class="rc"><div class="rl">Reg. Flujo</div><div class="rv g" id="rRegimen">-</div></div>
     </div>
     <div class="hf">
       <div class="fm"><span>ac</span>=r·ω² | <span>Fc</span>=m·r·ω² | <span>Vm</span>=d²Δρw²r/18μ | <span>Re</span>=d·Vm·ρ/μ</div>
@@ -152,7 +152,7 @@
     var G_GRAV=9.81, RMAX=0.75, paused=false, lastT=null, sysAngle=0, clock=0;
     var speeds=[], yOff=[], particles=[];
     var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 };
-    var syncInProgress = false; // Candado para evitar sobrecarga del DOM
+    var syncInProgress = false;
 
     function cO(n){return 2*Math.PI*n/60;}
     function cG(w,r){return w*w*r/G_GRAV;}
@@ -169,8 +169,8 @@
       if(syncInProgress) return;
       syncInProgress = true;
 
-      // Usamos requestAnimationFrame para asegurar que la manipulación del DOM ocurra de manera sincronizada y fluida
-      requestAnimationFrame(function() {
+      // Usamos setTimeout(0) o requestAnimationFrame para no bloquear el slider
+      setTimeout(function() {
         var container = document.getElementById('particleContainer');
         if(!container) { syncInProgress = false; return; }
         
@@ -184,7 +184,7 @@
             var p = {
               id: 'p' + i,
               angle: Math.random() * Math.PI * 2,
-              // CORRECCIÓN AQUÍ: Se guardaba en .coords y dejaba .rad como undefined, causando el bug visual naranja en (0,0,0)
+              // CORRECCIÓN FINAL: Asignación directa a p.rad para que nazcan en su órbita correcta y no en (0,0,0)
               rad: isHeavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20, 
               heavy: isHeavy,
               baseScale: isHeavy ? 1.2 : 0.9,
@@ -198,8 +198,7 @@
               'metalness:0.4; roughness:0.2; emissive:#551100; emissiveIntensity:1.2;' : 
               'metalness:0.3; roughness:0.1; emissive:#007777; emissiveIntensity:1.8;');
             
-            // Ocultar inicialmente hasta que el tick posicione correctamente en el primer frame
-            sphere.setAttribute('visible', 'false'); 
+            // ELIMINADO p.visible=false: Nacen visibles instantáneamente
             
             container.appendChild(sphere);
             p.el = sphere;
@@ -216,7 +215,7 @@
           }
         }
         syncInProgress = false;
-      });
+      }, 0);
     }
 
     function compute(){
@@ -365,7 +364,7 @@
 
       for(var i=0; i<particles.length; i++){
         var p=particles[i];
-        if(!p || p.rad === undefined) continue; // Protección por si acaso
+        if(!p) continue;
         
         var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
         if(nr>.96) nr=.96; if(nr<.02) nr=.02;
@@ -382,10 +381,6 @@
             y: 0.67+yOff[i]+Math.sin(clock*1.6+i*0.4)*0.03,
             z: rv*Math.sin(p.angle+sysAngle*0.02)
           });
-          // Hacer visible la partícula solo después de que tenga su primera posición calculada
-          if(p.el.getAttribute('visible') === 'false') {
-            p.el.setAttribute('visible', 'true');
-          }
         }
       }
       requestAnimationFrame(tick);
