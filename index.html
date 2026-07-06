@@ -106,11 +106,11 @@
       <a-cylinder position="-0.80 0.67 0" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
       <a-cylinder position="0 0.67 0.80" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
       <a-cylinder position="0 0.67 -0.80" radius="0.005" height="1.3" color="#00dcff" opacity="0.3"></a-cylinder>
-      <a-cylinder position="0 0.67 0" radius="0.022" height="1.35" color="#e0f7ff" material="metalness:0.9; roughness:0.1;"></a-entity>
+      <a-cylinder position="0 0.67 0" radius="0.022" height="1.35" color="#e0f7ff" material="metalness:0.9; roughness:0.1;"></a-cylinder>
 
       <a-entity id="particleContainer"></a-entity>
     </a-marker>
-  </scene>
+  </a-scene>
 
   <div id="startScreen">
     <div class="logo-ring"><div class="logo-inner"><div class="logo-dot"></div></div></div>
@@ -125,6 +125,7 @@
 
   <div id="hud">
     <div class="hh"><span class="ht">Centrifugacion — AR</span><span class="hb">Unidad III · MF-II</span></div>
+    <!-- AJUSTE SLIDERS SEGÚN TABLA image_b261c2.png -->
     <div class="sr"><span class="sl">RPM (w)</span><input type="range" id="sRPM" min="0" max="25000" value="400" step="100"><span class="sv" id="vRPM">400 rpm</span></div>
     <div class="sr"><span class="sl">Radio r (m)</span><input type="range" id="sR" min="0.005" max="0.60" value="0.30" step="0.001"><span class="sv" id="vR">0.300 m</span></div>
     <div class="sr"><span class="sl">Δρ (kg/m3)</span><input type="range" id="sDelta" min="0" max="2000" value="600" step="10"><span class="sv" id="vDelta">600 kg/m3</span></div>
@@ -140,7 +141,7 @@
       <div class="rc"><div class="rl">Masa Part. (m)</div><div class="rv" id="rMasa">-</div></div>
       <div class="rc"><div class="rl">V. Migrac.</div><div class="rv g" id="rVm">-</div></div>
       <div class="rc"><div class="rl">Reynolds Re</div><div class="rv o" id="rRe">-</div></div>
-      <div class="rc"><div class="rl">Reg. Flujo</div><div class="rv g" id="rRegimen">-</div></div>
+      <div class="rc"><div class="rl">Reg. Flujo</div><div class="rv w" id="rRegimen">-</div></div>
     </div>
     <div class="hf">
       <div class="fm"><span>ac</span>=r·ω² | <span>Fc</span>=m·r·ω² | <span>Vm</span>=d²Δρw²r/18μ | <span>Re</span>=d·Vm·ρ/μ</div>
@@ -152,7 +153,6 @@
     var G_GRAV=9.81, RMAX=0.75, paused=false, lastT=null, sysAngle=0, clock=0;
     var speeds=[], yOff=[], particles=[];
     var currentPhysics = { w:0, r:0, dr:0, dp:0, mu:0, Vm:0 };
-    var syncInProgress = false;
 
     function cO(n){return 2*Math.PI*n/60;}
     function cG(w,r){return w*w*r/G_GRAV;}
@@ -166,56 +166,47 @@
     function tr(e){ if(!e) return; e.style.setProperty('--p',((+e.value-+e.min)/(+e.max-+e.min))*100); }
 
     function syncParticleCount(targetCount) {
-      if(syncInProgress) return;
-      syncInProgress = true;
-
-      // Usamos setTimeout(0) o requestAnimationFrame para no bloquear el slider
-      setTimeout(function() {
-        var container = document.getElementById('particleContainer');
-        if(!container) { syncInProgress = false; return; }
-        
-        if(particles.length < targetCount) {
-          var startIdx = particles.length;
-          for(var i=startIdx; i<targetCount; i++) {
-            speeds.push(0.5 + Math.random()*0.7);
-            yOff.push(-0.48 + Math.random()*0.96);
-            var isHeavy = i % 2 === 0;
-            
-            var p = {
-              id: 'p' + i,
-              angle: Math.random() * Math.PI * 2,
-              // CORRECCIÓN FINAL: Asignación directa a p.rad para que nazcan en su órbita correcta y no en (0,0,0)
-              rad: isHeavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20, 
-              heavy: isHeavy,
-              baseScale: isHeavy ? 1.2 : 0.9,
-              el: null
-            };
-            
-            var sphere = document.createElement('a-sphere');
-            sphere.setAttribute('id', p.id);
-            sphere.setAttribute('color', p.heavy ? '#ff5500' : '#00ffff');
-            sphere.setAttribute('material', p.heavy ? 
-              'metalness:0.4; roughness:0.2; emissive:#551100; emissiveIntensity:1.2;' : 
-              'metalness:0.3; roughness:0.1; emissive:#007777; emissiveIntensity:1.8;');
-            
-            // ELIMINADO p.visible=false: Nacen visibles instantáneamente
-            
-            container.appendChild(sphere);
-            p.el = sphere;
-            particles.push(p);
-          }
-        } else if(particles.length > targetCount) {
-          while(particles.length > targetCount) {
-            var p = particles.pop();
-            speeds.pop();
-            yOff.pop();
-            if(p && p.el && p.el.parentNode) {
-              p.el.parentNode.removeChild(p.el);
-            }
+      var container = document.getElementById('particleContainer');
+      if(!container) return;
+      
+      if(particles.length < targetCount) {
+        var startIdx = particles.length;
+        for(var i=startIdx; i<targetCount; i++) {
+          speeds.push(0.5 + Math.random()*0.7);
+          yOff.push(-0.48 + Math.random()*0.96);
+          var isHeavy = i % 2 === 0;
+          
+          var p = {
+            id: 'p' + i,
+            angle: Math.random() * Math.PI * 2,
+            rad: isHeavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20,
+            coords: isHeavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20,
+            heavy: isHeavy,
+            baseScale: isHeavy ? 1.2 : 0.9,
+            el: null
+          };
+          
+          var sphere = document.createElement('a-sphere');
+          sphere.setAttribute('id', p.id);
+          sphere.setAttribute('color', p.heavy ? '#ff5500' : '#00ffff');
+          sphere.setAttribute('material', p.heavy ? 
+            'metalness:0.4; roughness:0.2; emissive:#551100; emissiveIntensity:1.2;' : 
+            'metalness:0.3; roughness:0.1; emissive:#007777; emissiveIntensity:1.8;');
+          
+          container.appendChild(sphere);
+          p.el = sphere;
+          particles.push(p);
+        }
+      } else if(particles.length > targetCount) {
+        while(particles.length > targetCount) {
+          var p = particles.pop();
+          speeds.pop();
+          yOff.pop();
+          if(p && p.el && p.el.parentNode) {
+            p.el.parentNode.removeChild(p.el);
           }
         }
-        syncInProgress = false;
-      }, 0);
+      }
     }
 
     function compute(){
@@ -310,6 +301,7 @@
       
       ['sRPM','sR','sDelta','sDp','sMu','sCount'].forEach(function(id){tr(document.getElementById(id));});
 
+      // Resetear radios lógicos a posición de mezcla
       for(var i=0; i<particles.length; i++){
         particles[i].rad = particles[i].heavy ? 0.06 + Math.random()*0.14 : 0.42 + Math.random()*0.20;
       }
@@ -354,7 +346,12 @@
       clock+=dt;
       
       var v = currentPhysics;
+      
+      // SOLUCIÓN AL PROBLEMA DE image_13.png: 
+      // El radio máximo visual (rm) ahora está vinculado al radio físico (v.r)
+      // Mapeamos el radio físico (0.005 a 0.60m) a unidades visuales de A-Frame razonables (0.01 a RMAX=0.75).
       var visualRMax = 0.01 + ((v.r - 0.005) / (0.60 - 0.005)) * (RMAX - 0.01);
+      
       sysAngle+=v.w*dt*0.3;
       
       var t=document.getElementById('tambor');
@@ -366,11 +363,14 @@
         var p=particles[i];
         if(!p) continue;
         
+        // Migración radial basada en Vm
         var nr=p.rad+(p.heavy?1:-1)*(v.Vm/v.r)*dt*speeds[i];
-        if(nr>.96) nr=.96; if(nr<.02) nr=.02;
+        if(nr>.96) nr=.96; if(nr<.02) nr=.02; // Límites lógicos internos
         p.rad=nr;
         
         p.angle+=v.w*dt*(0.22+0.02*i)*speeds[i];
+        
+        // CORRECCIÓN FINAL: Vincular radio de simulación al radio máximo visual dinámico
         var rv=p.rad*visualRMax;
         
         if(p.el) {
